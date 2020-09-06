@@ -1,0 +1,13 @@
+Changes
+Makefile.PL
+MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
+ppport.h
+README
+README.md
+t/10_basic_lcs.t
+XS.pm
+XS.xs
+xt/50_diff_bench.t
+xt/diffBench.t
+xt/split.t
