@@ -12,7 +12,8 @@ use Test::More;
 #cmp_deeply([],any());
 
 use Text::Levenshtein::BVXS;
-use Text::Levenshtein qw(distance);
+use Text::Levenshtein;
+
 #use Text::Levenshtein::XS qw(distance);
 
 my $examples = [
@@ -46,8 +47,6 @@ my $examples = [
     '_bcg__' ],
   [ 'xabcdef',
     'y_bc___' ],
-  [ 'öabcdef',
-    'ü§bc___' ],
   [ 'o__horens',
     'ontho__no'],
   [ 'Jo__horensis',
@@ -118,10 +117,10 @@ if (1) {
     my $m = scalar @a;
     my $n = scalar @b;
 
-    my $distance = distance($A,$B);
+    my $distance = &Text::Levenshtein::distance($A,$B);
 
     is(
-      Text::Levenshtein::BVXS::distance($A,$B),
+      &Text::Levenshtein::BVXS::distance($A,$B),
       #distance($A,$B),
       $distance,
 
@@ -167,10 +166,10 @@ if (1) {
     my $m = scalar @a;
     my $n = scalar @b;
 
-    my $distance = distance($A,$B);
+    my $distance = &Text::Levenshtein::distance($A,$B);
 
     is(
-      Text::Levenshtein::BV->distance(\@a,\@b),
+      &Text::Levenshtein::BVXS::distance($A,$B),
       #distance($A,$B),
       $distance,
 
