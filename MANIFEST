@@ -6,5 +6,7 @@ ppport.h
 README
 README.md
 t/10_basic_distance.t
-BVXS.pm
-BVXS.xs
+lib/Text/Levenshtein/BVXS.pm
+lib/Text/Levenshtein/BVXS.xs
+src/levbv.h
+src/levbv.c

@@ -14,7 +14,7 @@ require DynaLoader;
 use Autoloader;
 
 our @ISA = qw(Exporter DynaLoader);
-our @EXPORT = qw( distance );
+our @EXPORT = qw( distance noop noutf);
 bootstrap Text::Levenshtein::BVXS $VERSION;
 
 

@@ -5,18 +5,24 @@ use strict;
 use warnings;
 use utf8;
 
+binmode(STDOUT,":encoding(UTF-8)");
+binmode(STDERR,":encoding(UTF-8)");
+
 #use lib qw(../blib/);
 
 use Test::More;
-#use Test::Deep;
-#cmp_deeply([],any());
+use Test::More::UTF8;
 
 use Text::Levenshtein::BVXS;
 use Text::Levenshtein;
 
 #use Text::Levenshtein::XS qw(distance);
 
-my $examples = [
+my $examples1 = [
+  [ '', ''],
+  [ 'a', ''],
+  [ '', 'b'],
+  [ 'b', 'b'],
   ['ttatc__cg',
    '__agcaact'],
   ['abcabba_',
@@ -47,6 +53,8 @@ my $examples = [
     '_bcg__' ],
   [ 'xabcdef',
     'y_bc___' ],
+  [ 'öabcdef',
+    'ü§bc___' ],
   [ 'o__horens',
     'ontho__no'],
   [ 'Jo__horensis',
@@ -68,7 +76,10 @@ my $examples = [
     'abc'],
   [ 'aaaabbcc',
     'abc'],
+  [ 'ſhoereſhoſ',
+    'Choerephon'],
 ];
+
 
 
 my $examples2 = [
@@ -107,7 +118,7 @@ my $examples3 = [
 
 
 if (1) {
-  for my $example (@$examples) {
+  for my $example (@$examples1) {
     my $a = $example->[0];
     my $b = $example->[1];
     my @a = $a =~ /([^_])/g;

@@ -1,0 +1,10 @@
+#ifndef _LEVBV_H
+#define _LEVBV_H
+
+int dist_asci (const char * a, int alen, const char * b,  int blen);
+//int dist_uni (const UV * a, int alen, const UV * b, int blen);
+int dist_uni (const uint64_t * a, int alen, const uint64_t * b, int blen);
+//int levbv (const UV * a, int alen, const UV * b, int blen);
+int levnoop (const UV * a, int alen, const UV * b, int blen);
+int noutf (const SV * a, const SV * b);
+#endif
