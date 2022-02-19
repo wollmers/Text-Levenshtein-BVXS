@@ -17,7 +17,9 @@
 // https://docs.mojolicious.org/perlguts#How-do-I-pass-a-Perl-string-to-a-C-library
 
 // https://docs.mojolicious.org/perlapi
-// UV  utf8n_to_uvchr(const U8 *s, STRLEN curlen, STRLEN *retlen, const U32 flags)
+// UV utf8n_to_uvchr(const U8 *s, STRLEN curlen, STRLEN *retlen, const U32 flags)
+// UV utf8_to_uvchr_buf(const U8 *s, const U8 *send, STRLEN *retlen)
+
 UV *
 text2UV (SV *sv, STRLEN *lenp)
 {
@@ -33,7 +35,6 @@ text2UV (SV *sv, STRLEN *lenp)
        STRLEN clen;
        while (len)
          {
-         // UV  utf8_to_uvchr_buf(const U8 *s, const U8 *send, STRLEN *retlen)
            *p++ = utf8n_to_uvchr (s, len, &clen, 0);
 
            if (clen < 0)
@@ -56,13 +57,24 @@ dist_any (SV *s1, SV *s2)
 {
     int dist;
 	if (SvUTF8 (s1) || SvUTF8 (s2) ) {
+	/*
         STRLEN l1, l2;
+        // char*  sv_2pvutf8(SV *sv, STRLEN *const lp)
         uint64_t *c1 = (uint64_t *)text2UV (s1, &l1);
         //UV *c1 = text2UV (s1, &l1);
         uint64_t *c2 = (uint64_t *)text2UV (s2, &l2);
         //UV *c2 = text2UV (s2, &l2);
 
         dist = dist_uni (c1, l1, c2, l2);
+    */
+        STRLEN m;
+        STRLEN n;
+        // SvPVbyte
+        char *a = SvPV (s1, m);
+        char *b = SvPV (s2, n);
+
+        dist = dist_utf8_ucs (a, m, b, n);
+        
         /*
         STRLEN m;
         STRLEN n;
@@ -75,6 +87,7 @@ dist_any (SV *s1, SV *s2)
     else {
         STRLEN m;
         STRLEN n;
+        // SvPVbyte
         char *a = SvPV (s1, m);
         char *b = SvPV (s2, n);
 
@@ -83,7 +96,7 @@ dist_any (SV *s1, SV *s2)
   return dist;
 }
 
-#line 87 "lib/Text/Levenshtein/BVXS.c"
+#line 100 "lib/Text/Levenshtein/BVXS.c"
 #ifndef PERL_UNUSED_VAR
 #  define PERL_UNUSED_VAR(var) if (0) var = var
 #endif
@@ -227,7 +240,7 @@ S_croak_xs_usage(const CV *const cv, const char *const params)
 #  define newXS_deffile(a,b) Perl_newXS_deffile(aTHX_ a,b)
 #endif
 
-#line 231 "lib/Text/Levenshtein/BVXS.c"
+#line 244 "lib/Text/Levenshtein/BVXS.c"
 
 XS_EUPXS(XS_Text__Levenshtein__BVXS_distance); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_Text__Levenshtein__BVXS_distance)
@@ -242,12 +255,12 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_distance)
 ;
 	int	RETVAL;
 	dXSTARG;
-#line 85 "lib/Text/Levenshtein/BVXS.xs"
+#line 98 "lib/Text/Levenshtein/BVXS.xs"
 {
 
         RETVAL = dist_any (s1, s2);
 }
-#line 251 "lib/Text/Levenshtein/BVXS.c"
+#line 264 "lib/Text/Levenshtein/BVXS.c"
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);
@@ -267,7 +280,7 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_noop)
 ;
 	int	RETVAL;
 	dXSTARG;
-#line 98 "lib/Text/Levenshtein/BVXS.xs"
+#line 111 "lib/Text/Levenshtein/BVXS.xs"
 {
         STRLEN l1, l2;
         UV *c1 = text2UV (s1, &l1);
@@ -275,7 +288,7 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_noop)
 
         RETVAL = levnoop (c1, l1, c2, l2);
 }
-#line 279 "lib/Text/Levenshtein/BVXS.c"
+#line 292 "lib/Text/Levenshtein/BVXS.c"
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);
@@ -295,9 +308,9 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_noutf)
 ;
 	int	RETVAL;
 	dXSTARG;
-#line 114 "lib/Text/Levenshtein/BVXS.xs"
+#line 127 "lib/Text/Levenshtein/BVXS.xs"
 	RETVAL = noutf (s1, s2);
-#line 301 "lib/Text/Levenshtein/BVXS.c"
+#line 314 "lib/Text/Levenshtein/BVXS.c"
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);

@@ -8,7 +8,9 @@
 // https://docs.mojolicious.org/perlguts#How-do-I-pass-a-Perl-string-to-a-C-library
 
 // https://docs.mojolicious.org/perlapi
-// UV  utf8n_to_uvchr(const U8 *s, STRLEN curlen, STRLEN *retlen, const U32 flags)
+// UV utf8n_to_uvchr(const U8 *s, STRLEN curlen, STRLEN *retlen, const U32 flags)
+// UV utf8_to_uvchr_buf(const U8 *s, const U8 *send, STRLEN *retlen)
+
 UV *
 text2UV (SV *sv, STRLEN *lenp)
 {
@@ -24,7 +26,6 @@ text2UV (SV *sv, STRLEN *lenp)
        STRLEN clen;
        while (len)
          {
-         // UV  utf8_to_uvchr_buf(const U8 *s, const U8 *send, STRLEN *retlen)
            *p++ = utf8n_to_uvchr (s, len, &clen, 0);
 
            if (clen < 0)
@@ -47,13 +48,24 @@ dist_any (SV *s1, SV *s2)
 {
     int dist;
 	if (SvUTF8 (s1) || SvUTF8 (s2) ) {
+	/*
         STRLEN l1, l2;
+        // char*  sv_2pvutf8(SV *sv, STRLEN *const lp)
         uint64_t *c1 = (uint64_t *)text2UV (s1, &l1);
         //UV *c1 = text2UV (s1, &l1);
         uint64_t *c2 = (uint64_t *)text2UV (s2, &l2);
         //UV *c2 = text2UV (s2, &l2);
 
         dist = dist_uni (c1, l1, c2, l2);
+    */
+        STRLEN m;
+        STRLEN n;
+        // SvPVbyte
+        char *a = SvPV (s1, m);
+        char *b = SvPV (s2, n);
+
+        dist = dist_utf8_ucs (a, m, b, n);
+        
         /*
         STRLEN m;
         STRLEN n;
@@ -66,6 +78,7 @@ dist_any (SV *s1, SV *s2)
     else {
         STRLEN m;
         STRLEN n;
+        // SvPVbyte
         char *a = SvPV (s1, m);
         char *b = SvPV (s2, n);
 

@@ -230,3 +230,10 @@ TL::Flex_uni    2698541/s          113%        109%           5%           --   
 TL::Flex_ascii  3817631/s          201%        196%          48%          41%             --           -69%
 TL::BVXS_ascii 12365282/s          875%        857%         381%         358%           224%             --
 
+
+TL::uni_noop    3398162/s
+TL::utf8_noop  30247384/s
+
+TL::BVXS_uni    2572440/s
+TL::BVXS_utf8   8652585/s
+TL::BVXS_ascii 12365282/s
