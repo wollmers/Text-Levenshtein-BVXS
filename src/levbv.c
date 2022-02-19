@@ -4,16 +4,17 @@
  *
 */
 
-
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <nmmintrin.h>
 
 #include "levbv.h"
+
+#include "utf8.h"
+#include "utf8.c"
 
 /***** Hashi *****/
 
@@ -55,22 +56,6 @@ inline uint64_t hashi_getpos (Hashi *hashi, uint32_t key) {
 
 /************************/
 
-static const u_int32_t offsetsFromUTF8[6] = {
-    0x00000000UL, 0x00003080UL, 0x000E2080UL,
-    0x03C82080UL, 0xFA082080UL, 0x82082080UL
-};
-
-static const char trailingBytesForUTF8[256] = {
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
-};
-
 static const char allBytesForUTF8[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -82,58 +67,10 @@ static const char allBytesForUTF8[256] = {
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, 4,4,4,4,4,4,4,4,5,5,5,5,6,6,6,6
 };
 
-/* returns length of next utf-8 sequence */
-int u8_seqlen(char *s)
-{
-    return trailingBytesForUTF8[(unsigned int)(unsigned char)s[0]] + 1;
-}
-
-/* conversions without error checking
-   only works for valid UTF-8, i.e. no 5- or 6-byte sequences
-   srcsz = source size in bytes, or -1 if 0-terminated
-   sz = dest size in # of wide characters
-
-   returns # characters converted
-   dest will always be L'\0'-terminated, even if there isn't enough room
-   for all the characters.
-   if sz = srcsz+1 (i.e. 4*srcsz+4 bytes), there will always be enough space.
-*/
-int u8_to_ucs(u_int32_t *dest, int sz, char *src, int srcsz)
-{
-    u_int32_t ch;
-    char *src_end = src + srcsz;
-    int nb;
-    int i=0;
-
-    while (i < sz-1) {
-        nb = trailingBytesForUTF8[(unsigned char)*src];
-        if (srcsz == -1) {
-            if (*src == 0)
-                goto done_toucs;
-        }
-        else {
-            if (src + nb >= src_end)
-                goto done_toucs;
-        }
-        ch = 0;
-        switch (nb) {
-            /* these fall through deliberately */
-        case 3: ch += (unsigned char)*src++; ch <<= 6;
-        case 2: ch += (unsigned char)*src++; ch <<= 6;
-        case 1: ch += (unsigned char)*src++; ch <<= 6;
-        case 0: ch += (unsigned char)*src++;
-        }
-        ch -= offsetsFromUTF8[nb];
-        dest[i++] = ch;
-    }
- done_toucs:
-    dest[i] = 0;
-    return i;
-}
 
 /* number of characters */
 /*
-int u8_strlen(char *s)
+int utf8_strlen(char *s)
 {
     int count = 0;
     int i = 0;
@@ -151,19 +88,6 @@ static const uint64_t width = 64;
 
 
 /***********************/
-
-/*
-static const char allBytesForUTF8[256] = {
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, 4,4,4,4,4,4,4,4,5,5,5,5,6,6,6,6
-};
-*/
 
 static const uint64_t masks[64] = {
 	//0x0000000000000000,
@@ -300,10 +224,27 @@ int dist_utf8_i (char * a, uint32_t alen, char * b, uint32_t blen) {
     return diff; 
 }
 
+// utf-8 to UCS-4 wrapper for dist_uni
+int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
+    
+    uint32_t a_ucs[(alen+1)*4];
+    uint32_t b_ucs[(blen+1)*4];
+    int a_chars;
+    int b_chars; 
+    // int u8_toucs(u_int32_t *dest, int sz, char *src, int srcsz)
+    a_chars = u8_toucs(a_ucs, (alen+1)*4, a, alen);
+    b_chars = u8_toucs(b_ucs, (blen+1)*4, b, blen);
+    
+    int diff;
+    diff = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
+    
+    return diff; 
+}
 
 // use uni codepoints as uint32_t key
 //int dist_uni (const UV *a, int alen, const UV *b, int blen) {
-int dist_uni (const uint64_t *a, int alen, const uint64_t *b, int blen) {
+int dist_uni (const uint32_t *a, int alen, const uint32_t *b, int blen) {
+//int dist_uni (const uint32_t *a, int alen, const uint32_t *b, int blen) {
 
     Hashi hashi;
     uint32_t ikeys[alen+1];
@@ -341,6 +282,7 @@ int dist_uni (const uint64_t *a, int alen, const uint64_t *b, int blen) {
     return diff; 
 }
 
+#ifndef _LEVBV_TEST
 
 int levnoop (const UV * a, int alen, const UV * b, int blen) { 
     
@@ -356,3 +298,4 @@ int noutf (const SV * a, const SV * b) {
     return diff; 
 }
 
+#endif
