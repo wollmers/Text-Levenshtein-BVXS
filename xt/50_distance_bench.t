@@ -41,12 +41,12 @@ my @data_ascii = (
 
 # ehorſ 5 letters ſhoer
 my @data_uni = (
-  [split(//,'ſhoereſhoſ')],
+  [split(//,'Chſerſplzon')],
   [split(//,'Choerephon')]
 );
 
 my @strings_ascii = qw(Chrerrplzon Choerephon);
-my @strings_uni   = qw(ſhoereſhoſ Choerephon);
+my @strings_uni   = qw(Chſerſplzon Choerephon);
 
 my @data2 = (
   [split(//,'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY')],
@@ -237,3 +237,30 @@ TL::utf8_noop  30247384/s
 TL::BVXS_uni    2572440/s
 TL::BVXS_utf8   8652585/s
 TL::BVXS_ascii 12365282/s
+
+# prefix/suffix
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
+                     Rate T::Fuzz_ascii T::Fuzz_uni TL::Flex_uni TL::Flex_ascii TL::BVXS_uni TL::BVXS_ascii
+T::Fuzz_ascii   1303272/s            --         -1%         -49%           -66%         -84%           -91%
+T::Fuzz_uni     1310719/s            1%          --         -49%           -66%         -84%           -90%
+TL::Flex_uni    2572440/s           97%         96%           --           -33%         -69%           -81%
+TL::Flex_ascii  3817631/s          193%        191%          48%             --         -54%           -72%
+TL::BVXS_uni    8265802/s          534%        531%         221%           117%           --           -40%
+TL::BVXS_ascii 13762560/s          956%        950%         435%           260%          66%             --
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
+                     Rate T::Fuzz_ascii T::Fuzz_uni TL::Flex_uni TL::Flex_ascii TL::BVXS_uni TL::BVXS_ascii
+T::Fuzz_ascii   1303975/s            --         -2%         -48%           -67%         -83%           -91%
+T::Fuzz_uni     1329051/s            2%          --         -47%           -67%         -83%           -90%
+TL::Flex_uni    2530597/s           94%         90%           --           -36%         -68%           -82%
+TL::Flex_ascii  3978971/s          205%        199%          57%             --         -49%           -71%
+TL::BVXS_uni    7841914/s          501%        490%         210%            97%           --           -43%
+TL::BVXS_ascii 13762559/s          955%        936%         444%           246%          76%             --
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtest
+[dist_asci] iters: 20 M Elapsed: 0.799409 s Rate: 25.0 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 1.995221 s Rate: 10.0 (M/sec) 4
+[dist_uni] iters: 20 M Elapsed: 1.106825 s Rate: 18.1 (M/sec) 4
+Total: 3.901455 seconds
+
+

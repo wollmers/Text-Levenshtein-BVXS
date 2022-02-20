@@ -65,7 +65,7 @@ dist_any (SV *s1, SV *s2)
         char *b = SvPV (s2, n);
 
         dist = dist_utf8_ucs (a, m, b, n);
-        
+
         /*
         STRLEN m;
         STRLEN n;
@@ -73,7 +73,7 @@ dist_any (SV *s1, SV *s2)
         char *b = SvPV (s2, n);
 
         dist = dist_utf8_i (a, m, b, n);
-        */        
+        */
     }
     else {
         STRLEN m;
@@ -112,12 +112,12 @@ noop(s1, s2)
         STRLEN l1, l2;
         UV *c1 = text2UV (s1, &l1);
         UV *c2 = text2UV (s2, &l2);
-        
+
         RETVAL = levnoop (c1, l1, c2, l2);
 }
 	OUTPUT:
         RETVAL
-        
+
 int
 noutf (s1, s2)
 	    SV *	s1
@@ -126,5 +126,5 @@ noutf (s1, s2)
 CODE:
 	RETVAL = noutf (s1, s2);
 OUTPUT:
-	RETVAL        
+	RETVAL
         
