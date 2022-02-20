@@ -16,6 +16,9 @@
 #include "utf8.h"
 #include "utf8.c"
 
+// width of type bv_bits in bits, mostly 64 bits 
+static const uint64_t width = _LEVBV_WIDTH;
+
 /***** Hashi *****/
 
 typedef struct {
@@ -41,7 +44,7 @@ inline void hashi_setpos (Hashi *hashi, uint32_t key, uint32_t pos) {
     if (hashi->ikeys[index] == 0) {
         hashi->ikeys[index] = key;
     }
-    hashi->bits[index] |= 0x1ull << (pos % 64);
+    hashi->bits[index] |= 0x1ull << (pos % _LEVBV_WIDTH);
 }
 
 inline uint64_t hashi_getpos (Hashi *hashi, uint32_t key) {
@@ -83,7 +86,7 @@ int utf8_strlen(char *s)
 
 /************************/
 
-static const uint64_t width = 64;
+
 
 /***********************/
 
@@ -159,7 +162,7 @@ if (1) {
     // return difference of lengths.
     if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
 
-    static uint64_t posbits[128] = { 0 };
+    static bv_bits posbits[128] = { 0 };
     uint64_t i;
 
     for (i=0; i < 128; i++){ posbits[i] = 0; }
@@ -171,18 +174,18 @@ if (1) {
     }
 
     int diff = m;
-    uint64_t mask = 1 << (m - 1);
-    uint64_t VP   = masks[m - 1];
-    uint64_t VN   = 0;
+    bv_bits mask = 1 << (m - 1);
+    bv_bits VP   = masks[m - 1];
+    bv_bits VN   = 0;
 
     int n = bmax-bmin +1;
     // for my $j ( $bmin .. $bmax ) {
     for (i=0; i < n; i++){
-        uint64_t y = posbits[(unsigned int)b[i+bmin]];
-        uint64_t X  = y | VN;
-        uint64_t D0 = ((VP + (X & VP)) ^ VP) | X;
-        uint64_t HN = VP & D0;
-        uint64_t HP = VN | ~(VP|D0);
+        bv_bits y = posbits[(unsigned int)b[i+bmin]];
+        bv_bits X  = y | VN;
+        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+        bv_bits HN = VP & D0;
+        bv_bits HP = VN | ~(VP|D0);
         X  = (HP << 1) | 1;
         VN = X & D0;
         VP = (HN << 1) | ~(X | D0);
@@ -197,7 +200,7 @@ int dist_utf8_i (char * a, uint32_t alen, char * b, uint32_t blen) {
 
     Hashi hashi;
     uint32_t ikeys[alen+1];
-    uint64_t bits[alen+1];
+    bv_bits bits[alen+1];
     hashi.ikeys = ikeys;
     hashi.bits  = bits;
 
@@ -221,9 +224,9 @@ int dist_utf8_i (char * a, uint32_t alen, char * b, uint32_t blen) {
     }
 
     int diff = m;
-    uint64_t mask = 1 << (m - 1);
-    uint64_t VP   = masks[m - 1];
-    uint64_t VN   = 0;
+    bv_bits mask = 1 << (m - 1);
+    bv_bits VP   = masks[m - 1];
+    bv_bits VN   = 0;
 
     keylen = 0;
     for (i=0,q=0; q < blen; i++,q+=keylen){
@@ -232,11 +235,11 @@ int dist_utf8_i (char * a, uint32_t alen, char * b, uint32_t blen) {
           key = key << 8 | b[q+k];
         }
 
-        uint64_t y  = hashi_getpos (&hashi, key);
-        uint64_t X  = y | VN;
-        uint64_t D0 = ((VP + (X & VP)) ^ VP) | X;
-        uint64_t HN = VP & D0;
-        uint64_t HP = VN | ~(VP|D0);
+        bv_bits y  = hashi_getpos (&hashi, key);
+        bv_bits X  = y | VN;
+        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+        bv_bits HN = VP & D0;
+        bv_bits HP = VN | ~(VP|D0);
         X  = (HP << 1) | 1;
         VN = X & D0;
         VP = (HN << 1) | ~(X | D0);
@@ -288,11 +291,11 @@ if (1) {
     // return difference of lengths.
     if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
 
-    int m = amax-amin +1;
+    int m = amax-amin + 1;
 
     Hashi hashi;
     uint32_t ikeys[m+1];
-    uint64_t bits[m+1];
+    bv_bits bits[m+1];
     hashi.ikeys = ikeys;
     hashi.bits  = bits;
 
@@ -302,27 +305,27 @@ if (1) {
         hashi.bits[i]  = 0;
     }
 
-    for (i=0; i < m; i++){
+    for (i=0; i < m; i++) {
         hashi_setpos (&hashi, a[i+amin], i);
     }
 
     int diff = m;
-    uint64_t mask = 1 << (m - 1);
-    uint64_t VP   = masks[m - 1];
-    uint64_t VN   = 0;
+    bv_bits mask = 1 << (m - 1);
+    bv_bits VP   = masks[m - 1];
+    bv_bits VN   = 0;
 
     int n = bmax-bmin +1;
 
     for (i=0; i < n; i++){
-        uint64_t y = hashi_getpos (&hashi, b[i+bmin]);
-        uint64_t X  = y | VN;
-        uint64_t D0 = ((VP + (X & VP)) ^ VP) | X;
-        uint64_t HN = VP & D0;
-        uint64_t HP = VN | ~(VP|D0);
+        bv_bits y = hashi_getpos (&hashi, b[i+bmin]);
+        bv_bits X  = y | VN;
+        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+        bv_bits HN = VP & D0;
+        bv_bits HP = VN | ~(VP|D0);
         X  = (HP << 1) | 1;
         VN = X & D0;
         VP = (HN << 1) | ~(X | D0);
-      if (HP & mask) { diff++; }
+        if (HP & mask) { diff++; }
         if (HN & mask) { diff--; }
     }
     return diff;

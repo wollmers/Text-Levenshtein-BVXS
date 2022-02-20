@@ -74,7 +74,7 @@ dist_any (SV *s1, SV *s2)
         char *b = SvPV (s2, n);
 
         dist = dist_utf8_ucs (a, m, b, n);
-        
+
         /*
         STRLEN m;
         STRLEN n;
@@ -82,7 +82,7 @@ dist_any (SV *s1, SV *s2)
         char *b = SvPV (s2, n);
 
         dist = dist_utf8_i (a, m, b, n);
-        */        
+        */
     }
     else {
         STRLEN m;

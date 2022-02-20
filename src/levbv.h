@@ -1,6 +1,21 @@
 #ifndef _LEVBV_H
 #define _LEVBV_H
 
+#include <stdint.h>
+
+#ifdef __x86_64__
+    #if SIZE_MAX == 0xFFFFFFFF
+        typedef uint32_t bv_bits;
+        #define _LEVBV_WIDTH 32
+    #else
+        typedef uint64_t bv_bits;
+        #define _LEVBV_WIDTH 64
+    #endif
+#else
+    typedef uint32_t bv_bits;
+    #define _LEVBV_WIDTH 32
+#endif
+
 int dist_asci (const char * a, int alen, const char * b,  int blen);
 //int dist_uni (const UV * a, int alen, const UV * b, int blen);
 //int dist_uni (const uint64_t * a, int alen, const uint64_t * b, int blen);
