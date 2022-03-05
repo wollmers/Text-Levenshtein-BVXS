@@ -78,47 +78,23 @@ my $tf_uni   = Text::Fuzzy->new($data_uni[0]);
 
 if (1) {
     cmpthese( -1, {
-       ##'TL::BV' => sub {
-       ##     Text::Levenshtein::BV->distance(@data)
-       ## },
        'TL::BVXS_ascii' => sub {
             Text::Levenshtein::BVXS::distance(@strings_ascii)
         },
        'TL::BVXS_uni' => sub {
             Text::Levenshtein::BVXS::distance(@strings_uni)
         },
-       #'TL::BVXSnoop' => sub {
-       #     Text::Levenshtein::BVXS::noop(@strings)
-       # },
-       #'TL::BVXSnoutf' => sub {
-       #     Text::Levenshtein::BVXS::noutf(@strings)
-       # },
-       #'Lev::Simple' => sub {
-       #     Levenshtein::Simple->distance(@data)
-       # },
-       #'LCS::BV' => sub {
-        #    LCS::BV->LLCS(@data)
-       # },
-        #'TL::XS' => sub {
-        #    &Text::Levenshtein::XS::distance(@strings)
-        #},
-       #'TLXS' => sub {
-       #     &Text::LevenshteinXS::distance(@strings)
-       #},
-       # 'TL' => sub {
-       #     &Text::Levenshtein::distance(@strings)
-        #},
+       'TL::BVXS_l52' => sub {
+            Text::Levenshtein::BVXS::distance(@strings2)
+        },
         'TL::Flex_ascii' => sub {
             &Text::Levenshtein::Flexible::levenshtein(@strings_ascii)
         },
         'TL::Flex_uni' => sub {
             &Text::Levenshtein::Flexible::levenshtein(@strings_uni)
         },
-        'T::Fuzz_ascii' => sub {
-            $tf_ascii->distance($data_ascii[1])
-        },
-        'T::Fuzz_uni' => sub {
-            $tf_uni->distance($data_uni[1])
+        'TL::Flex_l52' => sub {
+            &Text::Levenshtein::Flexible::levenshtein(@strings2)
         },
     });
 }
@@ -262,5 +238,39 @@ helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtest
 [dist_utf8_ucs] iters: 20 M Elapsed: 1.995221 s Rate: 10.0 (M/sec) 4
 [dist_uni] iters: 20 M Elapsed: 1.106825 s Rate: 18.1 (M/sec) 4
 Total: 3.901455 seconds
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtest
+[dist_asci]     iters: 20 M Elapsed: 0.803021 s Rate: 24.9 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 1.913089 s Rate: 10.5 (M/sec) 4
+[dist_uni]      iters: 20 M Elapsed: 1.084475 s Rate: 18.4 (M/sec) 4
+[dist_hybrid]   iters: 20 M Elapsed: 0.873442 s Rate: 22.9 (M/sec) 4
+
+using hybrid for uni
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
+                     Rate TL::Flex_l52 TL::Flex_uni TL::Flex_ascii TL::BVXS_l52 TL::BVXS_uni TL::BVXS_ascii
+TL::Flex_l52     211861/s           --         -91%           -94%         -95%         -97%           -98%
+TL::Flex_uni    2383127/s        1025%           --           -35%         -42%         -71%           -81%
+TL::Flex_ascii  3684085/s        1639%          55%             --         -10%         -56%           -71%
+TL::BVXS_l52    4110496/s        1840%          72%            12%           --         -50%           -68%
+TL::BVXS_uni    8303203/s        3819%         248%           125%         102%           --           -36%
+TL::BVXS_ascii 12877248/s        5978%         440%           250%         213%          55%             --
+
+2022-03-05 scan ascii first, minimize construction of non-ascii
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtest
+[dist_asci]     iters: 20 M Elapsed: 0.800581 s Rate: 25.0 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 1.803164 s Rate: 11.1 (M/sec) 4
+[dist_uni]      iters: 20 M Elapsed: 1.129935 s Rate: 17.7 (M/sec) 4
+[dist_hybrid]   iters: 20 M Elapsed: 0.948622 s Rate: 21.1 (M/sec) 4
+Total: 4.682302 seconds
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
+                     Rate TL::Flex_l52 TL::Flex_uni TL::Flex_ascii TL::BVXS_l52 TL::BVXS_uni TL::BVXS_ascii
+TL::Flex_l52     227556/s           --         -91%           -94%         -94%         -97%           -98%
+TL::Flex_uni    2502283/s        1000%           --           -33%         -37%         -69%           -82%
+TL::Flex_ascii  3747463/s        1547%          50%             --          -6%         -53%           -73%
+TL::BVXS_l52    3989148/s        1653%          59%             6%           --         -50%           -71%
+TL::BVXS_uni    7989875/s        3411%         219%           113%         100%           --           -43%
+TL::BVXS_ascii 13912027/s        6014%         456%           271%         249%          74%             --
 
 

@@ -122,6 +122,26 @@ if (1) {
         megaiters, elapsed, rate, distance);
 }
 
+    /* ########## dist_hybrid ########## */
+if (1) {
+    tic = clock();
+
+    megaiters = 20;
+
+    for (megacount = 0; megacount < megaiters; megacount++) {
+      for (count = 0; count < iters; count++) {
+          distance = dist_hybrid(a_ucs, a_chars, b_ucs, b_chars);
+      }
+    }
+
+    toc = clock();
+    elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
+    total += elapsed;
+    rate    = (double)megaiters / (double)elapsed;
+
+    printf("[dist_hybrid]   iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
+        megaiters, elapsed, rate, distance);
+}
 
     printf("Total: %f seconds\n", total);
 

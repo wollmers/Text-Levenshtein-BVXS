@@ -16,7 +16,7 @@
 #include "utf8.h"
 #include "utf8.c"
 
-// width of type bv_bits in bits, mostly 64 bits 
+// width of type bv_bits in bits, mostly 64 bits
 static const uint64_t width = _LEVBV_WIDTH;
 
 /***** Hashi *****/
@@ -261,7 +261,8 @@ int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
     b_chars = u8_toucs(b_ucs, (blen+1)*4, b, blen);
 
     int diff;
-    diff = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
+    //diff = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
+    diff = dist_hybrid(a_ucs, a_chars, b_ucs, b_chars);
 
     return diff;
 }
@@ -330,6 +331,102 @@ if (1) {
     }
     return diff;
 }
+
+// use uni codepoints as uint32_t key
+// or ascii table
+int dist_hybrid (const uint32_t *a, int alen, const uint32_t *b, int blen) {
+
+    int amin = 0;
+    int amax = alen-1;
+    int bmin = 0;
+    int bmax = blen-1;
+
+if (1) {
+    while (amin <= amax && bmin <= bmax && a[amin] == b[bmin]) {
+        amin++;
+        bmin++;
+    }
+    while (amin <= amax && bmin <= bmax && a[amax] == b[bmax]) {
+        amax--;
+        bmax--;
+    }
+}
+
+    // if one of the sequences is a complete subset of the other,
+    // return difference of lengths.
+    if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
+
+    int m = amax-amin + 1;
+
+    // for codepoints in the low range we use fast table lookup
+#ifndef _LEVBV_LOW_CHARS
+    #define _LEVBV_LOW_CHARS 128
+#endif
+
+    int low_chars = _LEVBV_LOW_CHARS;
+    static bv_bits posbits[_LEVBV_LOW_CHARS] = { 0 };
+    uint64_t i;
+
+    for (i=0; i < low_chars; i++) { posbits[i] = 0; }
+
+    int ascii_chars = 0;
+    for (i=0; i < m; i++) {
+        if (a[i+amin] < low_chars) {
+            posbits[(unsigned int)a[i+amin]] |= 0x1ull << i;
+            ascii_chars++;
+        }
+    }
+
+    // for codepoints in the high range we use sequential search
+    int uni_chars = m - ascii_chars;
+
+    Hashi hashi;
+    uint32_t ikeys[uni_chars+1];
+    bv_bits bits[uni_chars+1];
+    hashi.ikeys = ikeys;
+    hashi.bits  = bits;
+
+    //int32_t i;
+    for (i=0; i <= uni_chars; i++) {
+        hashi.ikeys[i] = 0;
+        hashi.bits[i]  = 0;
+    }
+
+    for (i=0; i < m; i++) {
+        if (a[i+amin] >= low_chars) {
+            hashi_setpos (&hashi, a[i+amin], i);
+        }
+    }
+
+    int diff = m;
+    bv_bits mask = 1 << (m - 1);
+    bv_bits VP   = masks[m - 1];
+    bv_bits VN   = 0;
+
+    int n = bmax-bmin +1;
+
+    bv_bits y;
+    for (i=0; i < n; i++){
+        if (b[i+bmin] < _LEVBV_LOW_CHARS) {
+            y = posbits[(unsigned int)b[i+bmin]];
+        }
+        else {
+            y = hashi_getpos (&hashi, b[i+bmin]);
+        }
+        bv_bits X  = y | VN;
+        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+        bv_bits HN = VP & D0;
+        bv_bits HP = VN | ~(VP|D0);
+        X  = (HP << 1) | 1;
+        VN = X & D0;
+        VP = (HN << 1) | ~(X | D0);
+        if (HP & mask) { diff++; }
+        if (HN & mask) { diff--; }
+    }
+    return diff;
+}
+
+// integer overflow http://www.fefe.de/intof.html
 
 #ifndef _LEVBV_TEST
 
