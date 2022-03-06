@@ -28,6 +28,7 @@ MYMETA.*
 !META.json
 /.prove
 
+!src/Makefile
 src/levtest
 src/levtestcpp
 src/*.o
