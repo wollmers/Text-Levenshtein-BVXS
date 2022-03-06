@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2020-2022, Helmut Wollmersdorfer, all rights reserved.
  *
+ * see file LICENSE in the distribution
 */
 
 #ifdef __cplusplus

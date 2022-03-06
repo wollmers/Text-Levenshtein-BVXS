@@ -273,4 +273,26 @@ TL::BVXS_l52    3989148/s        1653%          59%             6%           -- 
 TL::BVXS_uni    7989875/s        3411%         219%           113%         100%           --           -43%
 TL::BVXS_ascii 13912027/s        6014%         456%           271%         249%          74%             --
 
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtest
+[dist_asci]     distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_uni]      distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+[dist_asci]     iters: 20 M Elapsed: 0.809687 s Rate: 24.7 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 1.824845 s Rate: 11.0 (M/sec) 4
+[dist_uni]      iters: 20 M Elapsed: 1.140782 s Rate: 17.5 (M/sec) 4
+[dist_hybrid]   iters: 20 M Elapsed: 0.953847 s Rate: 21.0 (M/sec) 4
+Total: 4.729161 seconds
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtestcpp
+[dist_asci]     distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_uni]      distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+[dist_asci]     iters: 20 M Elapsed: 0.793727 s Rate: 25.2 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 1.809635 s Rate: 11.1 (M/sec) 4
+[dist_uni]      iters: 20 M Elapsed: 1.168586 s Rate: 17.1 (M/sec) 4
+[dist_hybrid]   iters: 20 M Elapsed: 0.948328 s Rate: 21.1 (M/sec) 4
+Total: 4.720276 seconds
+
 
