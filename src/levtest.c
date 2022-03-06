@@ -54,6 +54,19 @@ int main (void) {
     int distance;
     int distance2;
 
+    distance = dist_asci (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
+    printf("[dist_asci]     distance: %u expect: 4\n", distance);
+
+    distance = dist_utf8_ucs (utf_str1, utf_len1, utf_str2, utf_len2);
+    printf("[dist_utf8_ucs] distance: %u expect: 4\n", distance);
+
+    distance = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
+	printf("[dist_uni]      distance: %u expect: 4\n", distance);
+
+	distance = dist_hybrid(a_ucs, a_chars, b_ucs, b_chars);
+	printf("[dist_hybrid]   distance: %u expect: 4\n", distance);
+
+
     /* ########## dist_asci ########## */
 if (1) {
     tic = clock();
