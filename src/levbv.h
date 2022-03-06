@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef _LEVBV_H
 #define _LEVBV_H
 
@@ -29,4 +33,8 @@ int levnoop (const UV * a, int alen, const UV * b, int blen);
 int noutf (const SV * a, const SV * b);
 #endif
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

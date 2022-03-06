@@ -4,6 +4,10 @@
  *
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
@@ -196,7 +200,7 @@ if (1) {
 }
 
 // use utf-8 sequence as uint32_t key
-int dist_utf8_i (char * a, uint32_t alen, char * b, uint32_t blen) {
+int dist_utf8_i (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen) {
 
     Hashi hashi;
     uint32_t ikeys[alen+1];
@@ -425,6 +429,10 @@ if (1) {
     }
     return diff;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 // integer overflow http://www.fefe.de/intof.html
 

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // https://www.cprogramming.com/tutorial/unicode.html
 /*
   Basic UTF-8 manipulation routines
@@ -475,3 +479,7 @@ int u8_printf(char *fmt, ...)
     va_end(args);
     return cnt;
 }
+
+#ifdef __cplusplus
+}
+#endif

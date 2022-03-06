@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 
 /* is c the start of a utf8 sequence? */
@@ -69,3 +73,7 @@ int u8_is_locale_utf8(char *locale);
    locale is UTF-8. */
 int u8_vprintf(char *fmt, va_list ap);
 int u8_printf(char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
