@@ -14,7 +14,7 @@ use Test::More;
 use Test::More::UTF8;
 
 use Text::Levenshtein::BVXS;
-use Text::Levenshtein;
+use Text::Levenshtein qw(distance);
 
 #use Text::Levenshtein::XS qw(distance);
 
@@ -115,7 +115,24 @@ my $examples3 = [
     '_b_', ],
 ];
 
+if (1) {
+    my $a = "aabbc";
+    my $b = "aabcc";
+    my @a = $a =~ /([^_])/g;
+    my @b = $b =~ /([^_])/g;
+    my $A = join('',@a);
+    my $B = join('',@b);
+    my $m = scalar @a;
+    my $n = scalar @b;
 
+    my $distance = distance($A,$B);
+
+    is(
+      &Text::Levenshtein::BVXS::distance($A,$B),
+      $distance,
+      "[$a] m: $m, [$b] n: $n -> " . $distance
+    );
+}
 
 if (1) {
   for my $example (@$examples1) {
@@ -128,20 +145,17 @@ if (1) {
     my $m = scalar @a;
     my $n = scalar @b;
 
-    my $distance = &Text::Levenshtein::distance($A,$B);
+    my $distance = distance($A,$B);
 
     is(
       &Text::Levenshtein::BVXS::distance($A,$B),
-      #distance($A,$B),
       $distance,
-
-      #"[$a] m: $m, [$b] n: $n -> " . distance($A,$B)
       "[$a] m: $m, [$b] n: $n -> " . $distance
     );
   }
 }
 
-if (0) {
+if (1) {
   for my $example (@$examples2) {
     my $a = $example->[0];
     my $b = $example->[1];
@@ -155,11 +169,8 @@ if (0) {
     my $distance = distance($A,$B);
 
     is(
-      Text::Levenshtein::BV->distance(\@a,\@b),
-      #distance($A,$B),
+      &Text::Levenshtein::BVXS::distance($A,$B),
       $distance,
-
-      #"[$a] m: $m, [$b] n: $n -> " . distance($A,$B)
       "[$a] m: $m, [$b] n: $n -> " . $distance
     );
   }
@@ -181,17 +192,14 @@ if (1) {
 
     is(
       &Text::Levenshtein::BVXS::distance($A,$B),
-      #distance($A,$B),
       $distance,
-
-      #"[$a] m: $m, [$b] n: $n -> " . distance($A,$B)
       "[$a] m: $m, [$b] n: $n -> " . $distance
     );
   }
 }
 
 # test prefix-suffix optimization
-if (0) {
+if (1) {
   my $prefix = 'a';
   my $infix  = 'b';
   my $suffix = 'c';
@@ -215,19 +223,21 @@ if (0) {
       my $m = scalar @a;
       my @b = split(//,$b);
       my $n = scalar @b;
+      my $A = join('',@a);
+      my $B = join('',@b);
 
       is(
-        Text::Levenshtein::BV->distance(\@a,\@b),
-        distance(\@a,\@b),
+        &Text::Levenshtein::BVXS::distance($A,$B),
+        distance($A,$B),
 
-        "[$a] m: $m, [$b] n: $n -> " . distance(\@a,\@b)
+        "[$a] m: $m, [$b] n: $n -> " . distance($A,$B)
       );
     }
   }
 }
 
 # test error-by-one
-if (0) {
+if (1) {
   my $string1 = 'a';
   my $string2 = 'b';
   my @base_lengths = (16, 32, 64, 128, 256);
@@ -239,18 +249,20 @@ if (0) {
       my $m = scalar @a;
       my @b = split(//, $string2 x $mult);
       my $n = scalar @b;
+      my $A = join('',@a);
+      my $B = join('',@b);
       is(
-        Text::Levenshtein::BV->distance(\@a,\@b),
-        distance(\@a,\@b),
+        &Text::Levenshtein::BVXS::distance($A,$B),
+        distance($A,$B),
 
-        "[$string1 x $mult] m: $m, [$string2 x $mult] n: $n -> " . distance(\@a,\@b)
+        "[$string1 x $mult] m: $m, [$string2 x $mult] n: $n -> " . distance($A,$B)
        );
     }
   }
 }
 
 # test carry for possible machine words
-if (0) {
+if (1) {
   my $string1 = 'abd';
   my $string2 = 'badc';
   my @base_lengths = (16, 32, 64, 128, 256);
@@ -263,16 +275,73 @@ if (0) {
       my $mult2 = int($base_length2/length($string2)) + 1;
       my @b = split(//,$string2 x $mult2);
       my $n = scalar @b;
+      my $A = join('',@a);
+      my $B = join('',@b);
       is(
-        Text::Levenshtein::BV->distance(\@a,\@b),
-        distance(\@a,\@b),
+        &Text::Levenshtein::BVXS::distance($A,$B),
+        distance($A,$B),
 
-        "[$string1 x $mult1] m: $m, [$string2 x $mult2] n: $n -> " . distance(\@a,\@b)
+        "[$string1 x $mult1] m: $m, [$string2 x $mult2] n: $n -> " . distance($A,$B),
       );
     }
   }
 }
 
+# HINDI for testing combining characters
+if (1) {
+    my $string1 = 'राज्य';
+    my $string2 = 'उसकी';
+    my @base_lengths = (16);
+
+    for my $base_length1 (@base_lengths) {
+        my $mult1 = int($base_length1/length($string1)) + 1;
+        my @a = split(//,$string1 x $mult1);
+        my $m = scalar @a;
+        for my $base_length2 (@base_lengths) {
+            my $mult2 = int($base_length2/length($string2)) + 1;
+            my @b = split(//,$string2 x $mult2);
+            my $n = scalar @b;
+
+            my $A = join('',@a);
+            my $B = join('',@b);
+
+            is(
+                &Text::Levenshtein::BVXS::distance($A,$B),
+                distance($A, $B),
+                "[$string1 x $mult1] m: $m, [$string2 x $mult2] n: $n -> "
+                    . distance($A, $B)
+            );
+        }
+    }
+}
+
+# MEROITIC HIEROGLYPHIC LETTERs
+if (1) {
+    my $string1 = "\x{10980}\x{10981}\x{10983}";
+    my $string2 = "\x{10981}\x{10980}\x{10983}\x{10982}";
+    my @base_lengths = (16);
+
+    for my $base_length1 (@base_lengths) {
+        my $mult1 = int($base_length1/length($string1)) + 1;
+        my @a = split(//,$string1 x $mult1);
+        my $m = scalar @a;
+        for my $base_length2 (@base_lengths) {
+            my $mult2 = int($base_length2/length($string2)) + 1;
+            my @b = split(//,$string2 x $mult2);
+            my $n = scalar @b;
+
+            my $A = join('',@a);
+            my $B = join('',@b);
+
+            is(
+                &Text::Levenshtein::BVXS::distance($A,$B),
+                distance($A, $B),
+                "[$string1 x $mult1] m: $m, [$string2 x $mult2] n: $n -> "
+                    . distance($A, $B)
+            );
+        }
+    }
+}
 
 my @data3 = ([qw/a b d/ x 50], [qw/b a d c/ x 50]);
 

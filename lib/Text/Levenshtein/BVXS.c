@@ -91,12 +91,13 @@ dist_any (SV *s1, SV *s2)
         char *a = SvPV (s1, m);
         char *b = SvPV (s2, n);
 
-        dist = dist_asci (a, m, b, n);
+        //dist = dist_asci (a, m, b, n);
+        dist = dist_utf8_ucs (a, m, b, n);
     }
   return dist;
 }
 
-#line 100 "lib/Text/Levenshtein/BVXS.c"
+#line 101 "lib/Text/Levenshtein/BVXS.c"
 #ifndef PERL_UNUSED_VAR
 #  define PERL_UNUSED_VAR(var) if (0) var = var
 #endif
@@ -240,7 +241,7 @@ S_croak_xs_usage(const CV *const cv, const char *const params)
 #  define newXS_deffile(a,b) Perl_newXS_deffile(aTHX_ a,b)
 #endif
 
-#line 244 "lib/Text/Levenshtein/BVXS.c"
+#line 245 "lib/Text/Levenshtein/BVXS.c"
 
 XS_EUPXS(XS_Text__Levenshtein__BVXS_distance); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_Text__Levenshtein__BVXS_distance)
@@ -255,12 +256,12 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_distance)
 ;
 	int	RETVAL;
 	dXSTARG;
-#line 98 "lib/Text/Levenshtein/BVXS.xs"
+#line 99 "lib/Text/Levenshtein/BVXS.xs"
 {
 
         RETVAL = dist_any (s1, s2);
 }
-#line 264 "lib/Text/Levenshtein/BVXS.c"
+#line 265 "lib/Text/Levenshtein/BVXS.c"
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);
@@ -280,7 +281,7 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_noop)
 ;
 	int	RETVAL;
 	dXSTARG;
-#line 111 "lib/Text/Levenshtein/BVXS.xs"
+#line 112 "lib/Text/Levenshtein/BVXS.xs"
 {
         STRLEN l1, l2;
         UV *c1 = text2UV (s1, &l1);
@@ -288,7 +289,7 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_noop)
 
         RETVAL = levnoop (c1, l1, c2, l2);
 }
-#line 292 "lib/Text/Levenshtein/BVXS.c"
+#line 293 "lib/Text/Levenshtein/BVXS.c"
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);
@@ -308,9 +309,9 @@ XS_EUPXS(XS_Text__Levenshtein__BVXS_noutf)
 ;
 	int	RETVAL;
 	dXSTARG;
-#line 127 "lib/Text/Levenshtein/BVXS.xs"
+#line 128 "lib/Text/Levenshtein/BVXS.xs"
 	RETVAL = noutf (s1, s2);
-#line 314 "lib/Text/Levenshtein/BVXS.c"
+#line 315 "lib/Text/Levenshtein/BVXS.c"
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);

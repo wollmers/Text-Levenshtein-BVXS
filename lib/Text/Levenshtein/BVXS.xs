@@ -82,7 +82,8 @@ dist_any (SV *s1, SV *s2)
         char *a = SvPV (s1, m);
         char *b = SvPV (s2, n);
 
-        dist = dist_asci (a, m, b, n);
+        //dist = dist_asci (a, m, b, n);
+        dist = dist_utf8_ucs (a, m, b, n);
     }
   return dist;
 }
