@@ -435,6 +435,7 @@ if (1) {
 
     for (i=0; i < low_chars; i++) { posbits[i] = 0; }
 
+    // m * 9 instr
     int ascii_chars = 0;
     for (i=0; i < m; i++) {
         if (a[i+amin] < low_chars) {
@@ -481,7 +482,8 @@ if (1) {
     bv_bits y;
     //for (i=0; i < n; i++ {
     for (i=bmin; i <= bmax; i++) {
-        if (b[i+bmin] < _LEVBV_LOW_CHARS) {
+        //if (b[i+bmin] < _LEVBV_LOW_CHARS) {
+        if (b[i] < _LEVBV_LOW_CHARS) {
             //y = posbits[(unsigned int)b[i]];
             y = posbits[b[i]];
 
@@ -659,6 +661,98 @@ if (1) {
     return diff;
   }
 
+}
+
+#define MAX_LEVENSHTEIN_STRLEN    16384
+
+#define Min(x, y) ((x) < (y) ? (x) : (y))
+
+int
+dist_simple( const uint32_t *a, int alen, const uint32_t *b, int blen ) {
+
+    int amin = 0;
+    int amax = alen-1;
+    int bmin = 0;
+    int bmax = blen-1;
+
+if (1) {
+    while ( amin <= amax && bmin <= bmax && a[amin] == b[bmin] ) {
+        amin++;
+        bmin++;
+    }
+    while ( amin <= amax && bmin <= bmax && a[amax] == b[bmax] ) {
+        amax--;
+        bmax--;
+    }
+}
+    // if one of the sequences is a complete subset of the other,
+    // return difference of lengths.
+    if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
+
+    int m = amax - amin + 1;
+    int n = bmax - bmin + 1;
+
+    int i, j;
+
+    int distance;
+
+    /*
+    // TODO: error handling friendly to calling programs
+    // see https://stackoverflow.com/questions/385975/error-handling-in-c-code
+    if (m > MAX_LEVENSHTEIN_STRLEN ||
+        n > MAX_LEVENSHTEIN_STRLEN)
+    {
+      // croak("argument exceeds the maximum length of %d characters", MAX_LEVENSHTEIN_STRLEN);
+    }
+    */
+
+    /* Previous and current rows of notional array. */
+    // TODO: error handling friendly to calling programs
+    // if (prev == 0)
+    // fatal ("virtual memory exceeded");
+
+    int *prev = (int *)malloc(2 * (n + 1) * sizeof(int));
+    int *prev_alloc;
+    prev_alloc = prev;
+    int *curr;
+    int *temp;
+    curr = prev + (n + 1);
+
+    for (j = 0; j <= n; j++) { prev[j] = j; }
+
+    for ( i = 1; i <= m; i++) {
+
+        curr[0] = i;
+
+        for ( j = 1; j <= n; j++) {
+            int            ins;
+            int            del;
+            int            sub;
+
+            ins = curr[j - 1] + 1;
+            del = prev[j] + 1;
+            sub = prev[j - 1] + ((a[amin + i-1] == b[bmin + j-1]) ? 0 : 1);
+
+            /* Take the one with minimum cost. */
+            curr[j] = Min(ins, del);
+            curr[j] = Min(curr[j], sub);
+        }
+
+        /* Swap current row with previous row. */
+        temp = curr;
+        curr = prev;
+        prev = temp;
+    }
+
+    /*
+     * Because the final value was swapped from the previous row to the
+     * current row, that's where we'll find it.
+     */
+    distance = prev[n];
+
+    if ( prev ) { free(prev_alloc); }
+
+    return distance;
 }
 
 #ifdef __cplusplus

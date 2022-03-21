@@ -58,6 +58,16 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 );
 
+my @data_l68 = (
+  [split(//,'abcdefghijklmnopqrstuvwxyz0123456789!"$%&/()=?ABCDEFGHIJKLMNOPQRSTUVY')],
+  [split(//, 'bcdefghijklmnopqrstuvwxyz0123456789!"$%&/()=?ABCDEFGHIJKLMNOPQRSTUVYZ')]
+);
+
+my @strings_l68 = qw(
+abcdefghijklmnopqrstuvwxyz0123456789!"$%&/()=?ABCDEFGHIJKLMNOPQRSTUVY
+bcdefghijklmnopqrstuvwxyz0123456789!"$%&/()=?ABCDEFGHIJKLMNOPQRSTUVYZ
+);
+
 my @data3 = ([qw/a b d/ x 50], [qw/b a d c/ x 50]);
 
 my @strings3 = map { join('',@$_) } @data3;
@@ -87,6 +97,9 @@ if (1) {
        'TL::BVXS_l52' => sub {
             Text::Levenshtein::BVXS::distance(@strings2)
         },
+        'TL::BVXS_l68' => sub {
+            Text::Levenshtein::BVXS::distance(@strings_l68)
+        },
         'TL::Flex_ascii' => sub {
             &Text::Levenshtein::Flexible::levenshtein(@strings_ascii)
         },
@@ -95,6 +108,9 @@ if (1) {
         },
         'TL::Flex_l52' => sub {
             &Text::Levenshtein::Flexible::levenshtein(@strings2)
+        },
+        'TL::Flex_l68' => sub {
+            &Text::Levenshtein::Flexible::levenshtein(@strings_l68)
         },
     });
 }

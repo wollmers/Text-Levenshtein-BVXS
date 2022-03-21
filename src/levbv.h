@@ -26,6 +26,7 @@ int dist_asci (const char * a, int alen, const char * b,  int blen);
 int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen);
 int dist_uni (const uint32_t *a, int alen, const uint32_t *b, int blen);
 int dist_hybrid (const uint32_t *a, int alen, const uint32_t *b, int blen);
+int dist_simple (const uint32_t *a, int alen, const uint32_t *b, int blen);
 //int levbv (const UV * a, int alen, const UV * b, int blen);
 
 #ifndef _LEVBV_TEST
