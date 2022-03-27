@@ -13,10 +13,10 @@ CCPP = g++
 #CPPFLAGS = -std=c++11 -Wall -g -finput-charset=utf-8
 
 
-all: levtest levtestcpp
+all: levtest levtestcpp levtestarr
 
 clean:
-	rm -rf *.o levtest levtestcpp
+	rm -rf *.o levtest levtestcpp levtestarr
 
 rebuild: clean all
  
@@ -26,6 +26,12 @@ lcstest.o:
 
 levtest: levtest.o 
 	$(CC) $(CFLAGS) -o levtest levtest.o
+
+lcstestarr.o: 
+	$(CC) $(CFLAGS) -c -o levtestarr.o levtestarr.c
+	
+levtestarr: levtestarr.o 
+	$(CC) $(CFLAGS) -o levtestarr levtestarr.o
 
 levtestcpp.o: 
 	$(CCPP) -std=c++11 -Wall -g -finput-charset=utf-8 -O3 -c -o levtestcpp.o levtestcpp.cpp

@@ -91,6 +91,24 @@ dist_any (SV *s1, SV *s2)
 MODULE = Text::Levenshtein::BVXS  PACKAGE = Text::Levenshtein::BVXS
 
 int
+simple(s1, s2)
+	    SV *	s1
+        SV *	s2
+        PROTOTYPE: @
+        CODE:
+{
+        STRLEN m;
+        STRLEN n;
+        // SvPVbyte
+        char *a = SvPV (s1, m);
+        char *b = SvPV (s2, n);
+
+        RETVAL = dist_simple_utf8 (a, m, b, n);
+}
+	OUTPUT:
+        RETVAL
+
+int
 distance(s1, s2)
 	    SV *	s1
         SV *	s2

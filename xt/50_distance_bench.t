@@ -91,6 +91,9 @@ if (1) {
        'TL::BVXS_ascii' => sub {
             Text::Levenshtein::BVXS::distance(@strings_ascii)
         },
+       'TL::BVXS_simple' => sub {
+            Text::Levenshtein::BVXS::simple(@strings_ascii)
+        },
        'TL::BVXS_uni' => sub {
             Text::Levenshtein::BVXS::distance(@strings_uni)
         },
@@ -311,4 +314,26 @@ helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtestcpp
 [dist_hybrid]   iters: 20 M Elapsed: 0.948328 s Rate: 21.1 (M/sec) 4
 Total: 4.720276 seconds
 
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
+                    Rate TL::Flex_l68 TL::Flex_l52 TL::BVXS_l68 TL::BVXS_l52 TL::Flex_uni TL::Flex_ascii TL::BVXS_uni TL::BVXS_ascii
+TL::Flex_l68    124842/s           --         -44%         -84%         -95%         -95%           -97%         -98%           -99%
+TL::Flex_l52    223417/s          79%           --         -72%         -90%         -91%           -94%         -97%           -97%
+TL::BVXS_l68    793688/s         536%         255%           --         -66%         -69%           -79%         -90%           -91%
+TL::BVXS_l52   2338582/s        1773%         947%         195%           --          -7%           -37%         -70%           -73%
+TL::Flex_uni   2525240/s        1923%        1030%         218%           8%           --           -32%         -67%           -71%
+TL::Flex_ascii 3714590/s        2875%        1563%         368%          59%          47%             --         -52%           -58%
+TL::BVXS_uni   7699334/s        6067%        3346%         870%         229%         205%           107%           --           -13%
+TL::BVXS_ascii 8822153/s        6967%        3849%        1012%         277%         249%           138%          15%             --
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ time perl xt/50_distance_bench.t
+                     Rate TL::Flex_l68 TL::Flex_l52 TL::BVXS_l68 TL::Flex_uni TL::BVXS_l52 TL::Flex_ascii TL::BVXS_simple TL::BVXS_uni TL::BVXS_ascii
+TL::Flex_l68     129153/s           --         -42%         -84%         -94%         -95%           -97%            -98%         -98%           -98%
+TL::Flex_l52     222694/s          72%           --         -72%         -90%         -91%           -94%            -96%         -97%           -97%
+TL::BVXS_l68     793688/s         515%         256%           --         -64%         -67%           -80%            -85%         -90%           -91%
+TL::Flex_uni    2219767/s        1619%         897%         180%           --          -9%           -43%            -58%         -72%           -74%
+TL::BVXS_l52    2434193/s        1785%         993%         207%          10%           --           -37%            -54%         -69%           -71%
+TL::Flex_ascii  3884984/s        2908%        1645%         389%          75%          60%             --            -27%         -50%           -54%
+TL::BVXS_simple 5293291/s        3998%        2277%         567%         138%         117%            36%              --         -32%           -38%
+TL::BVXS_uni    7839820/s        5970%        3420%         888%         253%         222%           102%             48%           --            -7%
+TL::BVXS_ascii  8469267/s        6458%        3703%         967%         282%         248%           118%             60%           8%             --
 

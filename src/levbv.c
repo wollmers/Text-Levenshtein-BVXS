@@ -328,6 +328,23 @@ int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
     return diff;
 }
 
+int dist_simple_utf8 (char * a, uint32_t alen, char * b, uint32_t blen) {
+
+    uint32_t a_ucs[(alen+1)*4];
+    uint32_t b_ucs[(blen+1)*4];
+    int a_chars;
+    int b_chars;
+    // int u8_toucs(u_int32_t *dest, int sz, char *src, int srcsz)
+    a_chars = u8_toucs(a_ucs, (alen+1)*4, a, alen);
+    b_chars = u8_toucs(b_ucs, (blen+1)*4, b, blen);
+
+    int diff;
+    //diff = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
+    diff = dist_simple(a_ucs, a_chars, b_ucs, b_chars);
+
+    return diff;
+}
+
 // use uni codepoints as uint32_t key
 //int dist_uni (const UV *a, int alen, const UV *b, int blen) {
 int dist_uni (const uint32_t *a, int alen, const uint32_t *b, int blen) {
