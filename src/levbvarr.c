@@ -42,7 +42,7 @@ char* pBinFill( long int x, char *so, char fillChar) {
     sprintf( so, "%s", s );
     return so;
 }
-//printf("%ld =\t\t%#lx =\t\t0b%s\n",val,val,pBinFill(val,so,'0'));
+
 #endif
 
 /***** Array *****/
@@ -54,7 +54,7 @@ typedef struct {
     uint32_t elements;
 } Array;
 */
-Array *array_new (int len) {
+inline Array *array_new (int len) {
     Array *array = malloc(1 * sizeof (Array));
     array->capacity = (len+1)/2;
     array->elements = 0;
@@ -63,7 +63,7 @@ Array *array_new (int len) {
     return array;
 }
 
-int array_key_compare(Array *a, Array *b, int i, int j) {
+inline int array_key_compare(const Array *a, const Array *b, int i, int j) {
 
     if ( a->lens[i] != b->lens[j] || memcmp(a->keys[i], b->keys[j], a->lens[i]) ) {
         return 0;
@@ -71,6 +71,16 @@ int array_key_compare(Array *a, Array *b, int i, int j) {
 
     return 1;
 }
+
+inline void array_free (Array *a) {
+
+    if (a->keys) { free(a->keys); }
+    if (a->lens) { free(a->lens); }
+    if (a) { free(a); }
+
+}
+
+#ifdef _LEVBV_DEBUG
 
 void array_debug_utf8 (Array *array, char *desc) {
 
@@ -81,13 +91,17 @@ void array_debug_utf8 (Array *array, char *desc) {
             printf ("Entry %3d:", i);
             printf (" length=%3d ", array->lens[i]);
             printf ("%s"," [");
+            //char * key = (char *)array->keys[i];
             for (size_t j = 0; j < array->lens[i]; j++) {
   			    printf("%.1s", array->keys[i] + j);
+  			    //printf("%.1s", key[j]);
             }
             printf ("%s  \n","]");
         }
     }
 }
+
+#endif
 
 /***** Hash *****/
 
@@ -98,7 +112,7 @@ typedef struct {
 } Hash;
 
 // memcmp; insert or return
-int hash_index (Hash *hash, char *key, uint32_t keylen) {
+inline int hash_index (Hash *hash, void *key, uint32_t keylen) {
     int index = 0;
     while (hash->keys[index]
            && ((uint32_t)hash->lens[index] != keylen
@@ -109,7 +123,7 @@ int hash_index (Hash *hash, char *key, uint32_t keylen) {
 }
 
 // update bitmap
-void hash_setpos (Hash *hash, void *key, uint32_t pos, uint32_t keylen) {
+inline void hash_setpos (Hash *hash, void *key, uint32_t pos, uint32_t keylen) {
     int index = hash_index(hash, key, keylen);
     if (hash->keys[index] == 0) {
       	hash->keys[index] = key;
@@ -120,7 +134,7 @@ void hash_setpos (Hash *hash, void *key, uint32_t pos, uint32_t keylen) {
 
 inline void hash_setpos_k (
     Hash *hash,
-    uint32_t key,
+    void *key,
     uint32_t pos,
     uint32_t keylen,
     uint32_t k,
@@ -130,100 +144,26 @@ inline void hash_setpos_k (
 
     if (hash->keys[index] == 0) {
         hash->keys[index] = key;
+        hash->lens[index] = keylen;
     }
 
     hash->bits[index * kmax + k] |= 0x1ull << (pos % _LEVBV_WIDTH);
 }
 
 // get position bitmap
-uint64_t hash_getpos (Hash *hash, void *key, uint32_t keylen) {
+inline uint64_t hash_getpos (Hash *hash, void *key, uint32_t keylen) {
     int index = hash_index(hash, key, keylen);
     return hash->bits[index];
 }
 
-inline uint64_t hash_getpos_k (Hash *hash, uint32_t key, uint32_t keylen, uint32_t k, uint32_t kmax) {
+inline uint64_t hash_getpos_k (Hash *hash, void *key, uint32_t keylen, uint32_t k, uint32_t kmax) {
     int index = hash_index(hash, key, keylen);
 
     return hash->bits[index * kmax + k];
 }
 
-
-/***** Hashi *****/
-
-typedef struct {
-    uint32_t *ikeys;
-    //uint64_t *bits;
-    bv_bits *bits;
-} Hashi;
-
-inline int hashi_index (Hashi *hashi, uint32_t key) {
-    int index = 0;
-    while ( hashi->ikeys[index]
-           && ((uint32_t)hashi->ikeys[index] != key) ) {
-        index++;
-    }
-    return index;
-}
-
-inline void hashi_setpos (Hashi *hashi, uint32_t key, uint32_t pos) {
-    int index = 0;
-    while ( hashi->ikeys[index]
-           && ((uint32_t)hashi->ikeys[index] != key) ) {
-        index++;
-    }
-    if (hashi->ikeys[index] == 0) {
-        hashi->ikeys[index] = key;
-    }
-    hashi->bits[index] |= 0x1ull << (pos % _LEVBV_WIDTH);
-}
-
-inline void hashi_setpos_k (Hashi *hashi, uint32_t key, uint32_t pos, uint32_t k, uint32_t kmax ) {
-    int index = 0;
-    while ( hashi->ikeys[index]
-           && ((uint32_t)hashi->ikeys[index] != key) ) {
-        index++;
-    }
-    if (hashi->ikeys[index] == 0) {
-        hashi->ikeys[index] = key;
-    }
-    //hashi->bits[index][k] |= 0x1ull << (pos % _LEVBV_WIDTH);
-    /*
-    int pos_index = index * kmax + k;
-    uint8_t ch = index;
-    char dest[] = {(char)ch, 0};
-    printf("[dist_hybrid] setpos   index * kmax + k * kmax + k: %u char: %s \n",
-                    pos_index, dest);
-    */
-    hashi->bits[index * kmax + k] |= 0x1ull << (pos % _LEVBV_WIDTH);
-}
-
-
-inline uint64_t hashi_getpos (Hashi *hashi, uint32_t key) {
-    int index = 0;
-    while ( hashi->ikeys[index]
-           && ((uint32_t)hashi->ikeys[index] != key) ) {
-        index++;
-    }
-    return hashi->bits[index];
-}
-
-inline uint64_t hashi_getpos_k (Hashi *hashi, uint32_t key, uint32_t k, uint32_t kmax) {
-    int index = 0;
-    while ( hashi->ikeys[index]
-           && ((uint32_t)hashi->ikeys[index] != key) ) {
-        index++;
-    }
-    // return hashi->bits[index][k];
-    return hashi->bits[index * kmax + k];
-}
-
-/************************/
-
-
-
-
 /***********************/
-
+// TODO: tables for other widths
 static const uint64_t masks[64] = {
   //0x0000000000000000,
   0x0000000000000001ull,0x0000000000000003ull,0x0000000000000007ull,0x000000000000000full,
@@ -244,9 +184,6 @@ static const uint64_t masks[64] = {
   0x1fffffffffffffffull,0x3fffffffffffffffull,0x7fffffffffffffffull,0xffffffffffffffffull,
 };
 
-
-
-
 // array of strings
 // int dist_arr (const Array *a, int alen, const Array *b, int blen);
 int dist_array (const Array *a, const Array *b ) {
@@ -256,7 +193,7 @@ int dist_array (const Array *a, const Array *b ) {
     int bmin = 0;
     int bmax = b->elements - 1;
 
-if (0) {
+if (1) {
     // int array_key_compare(Array *a, Array *b, int i, int j)
     while (amin <= amax && bmin <= bmax && array_key_compare(a, b, amin, bmin) ) {
         amin++;
@@ -301,14 +238,8 @@ if (0) {
 
     // uint32_t q, keylen;
     uint32_t keylen;
-    //for (i=0,q=0; (unsigned char)a[q] != '\0'; i++,q+=keylen){
-    /*   for (i=0; i < m; i++) {
-        hashi_setpos (&hashi, a[i+amin], i);
-    } */
     for (i=0; i < m; i++){
-        //keylen = strlen(a[i+amin]);
         keylen = a->lens[i+amin];
-        // void hash_setpos (Hash *hash, void *key, uint32_t pos, uint32_t keylen)
       	hash_setpos (&hash, a->keys[i+amin], i, keylen);
     }
 
@@ -323,9 +254,7 @@ if (0) {
     #endif
 
     bv_bits y;
-    //for (i=0; i < n; i++ {
     for (i=bmin; i <= bmax; i++) {
-        //if (b[i+bmin] < _LEVBV_LOW_CHARS) {
         y = hash_getpos (&hash, b->keys[i], b->lens[i]);
 
             #ifdef _LEVBV_DEBUG
@@ -380,7 +309,6 @@ if (0) {
     for (i=0; i <= m; i++) {
         hash.keys[i]         = 0;
         for (k=0; k < kmax; k++ ) {
-                //hashi.bits[i][k] = 0;
             hash.bits[i * kmax + k] = 0;
         }
     }
@@ -390,7 +318,6 @@ if (0) {
         //keylen = strlen(a[i+amin]);
         keylen = a->lens[i+amin];
         for (k=0; k < kmax; k++ ) {
-            //hash_setpos_k (&hash, a[i+amin], i, keylen, k, kmax);
             hash_setpos_k (&hash, a->keys[i+amin], i, keylen, k, kmax);
         }
     }
@@ -477,7 +404,7 @@ dist_simple_arr( const Array *a, const Array *b ) {
     int bmin = 0;
     int bmax = b->elements - 1;
 
-if (0) {
+if (1) {
     while (amin <= amax && bmin <= bmax && array_key_compare(a, b, amin, bmin) ) {
         amin++;
         bmin++;

@@ -20,6 +20,13 @@ extern "C" {
     #define _LEVBV_WIDTH 32
 #endif
 
+typedef struct {
+    void **keys;
+    uint32_t *lens;
+    int capacity;
+    int elements;
+} Array;
+
 int dist_asci (const char * a, int alen, const char * b,  int blen);
 //int dist_uni (const UV * a, int alen, const UV * b, int blen);
 //int dist_uni (const uint64_t * a, int alen, const uint64_t * b, int blen);
@@ -29,6 +36,9 @@ int dist_hybrid (const uint32_t *a, int alen, const uint32_t *b, int blen);
 int dist_simple (const uint32_t *a, int alen, const uint32_t *b, int blen);
 int dist_simple_utf8 (char * a, uint32_t alen, char * b, uint32_t blen);
 //int levbv (const UV * a, int alen, const UV * b, int blen);
+
+int dist_array (const Array *a, const Array *b);
+int dist_simple_arr( const Array *a, const Array *b );
 
 #ifndef _LEVBV_TEST
 int levnoop (const UV * a, int alen, const UV * b, int blen);

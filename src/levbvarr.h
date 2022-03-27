@@ -22,7 +22,7 @@ extern "C" {
 
 typedef struct {
     void **keys;
-    int *lens;
+    uint32_t *lens;
     int capacity;
     int elements;
 } Array;

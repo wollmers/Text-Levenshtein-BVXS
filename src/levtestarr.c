@@ -8,6 +8,8 @@
 #define _LEVBV_TEST
 #endif
 
+//#define _LEVBV_DEBUG
+
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
@@ -15,8 +17,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "levbvarr.h"
-#include "levbvarr.c"
+#include "levbv.h"
+#include "levbv.c"
 
 // non destructive split
 int split_utf8 (Array *array, char *source, int srclen, const char *delim) {
@@ -81,12 +83,48 @@ int main (void) {
 
     const char delim[] = " ";
     Array *array1 = array_new (utf_len1);
+/*
+    Array array1;
+    array1.capacity = (utf_len1+1)/2;
+    void     *keys1[(utf_len1+1)/2];
+    uint32_t lens1[(utf_len1+1)/2];
+    array1.keys = keys1;
+    array1.lens = lens1;
+    array1.elements = 0;
+
+    int i;
+
+    for (i = 0; i <= (utf_len1+1)/2; i++) {
+      array1.keys[i] = 0;
+      array1.lens[i] = 0;
+    }
+*/
+
     array1->elements = split_utf8 (array1, utf_str1, utf_len1, delim);
-    //array_debug_utf8 (array1, "array1");
+    #ifdef _LEVBV_DEBUG
+    array_debug_utf8 (array1, "array1");
+    #endif
 
     Array *array2 = array_new (utf_len2);
+/*
+    Array array2;
+    array2.capacity = (utf_len2+1)/2;
+    void     *keys2[(utf_len2+1)/2];
+    uint32_t lens2[(utf_len2+1)/2];
+    array2.keys = keys2;
+    array2.lens = lens2;
+    array2.elements = 0;
+
+    for (i = 0; i <= (utf_len2+1)/2; i++) {
+      array2.keys[i] = 0;
+      array2.lens[i] = 0;
+    }
+*/
+
     array2->elements = split_utf8 (array2, utf_str2, utf_len2, delim);
-    //array_debug_utf8 (array2, "array2");
+    #ifdef _LEVBV_DEBUG
+    array_debug_utf8 (array2, "array2");
+    #endif
 
     int distance;
     int distance2;
@@ -171,4 +209,39 @@ if ( 1 && bench_on ) {
 
     return 0;
 
+    array_free (array1);
+    array_free (array2);
+
 }
+
+/*
+
+$ ./levtestarr
+[dist_array]      distance: 5 expect: 5
+[dist_simple_arr] distance: 5 expect: 5
+[dist_array]      iters: 20 M Elapsed: 3.634914 s Rate: 5.5 (M/sec) 5
+[dist_simple_arr] iters: 20 M Elapsed: 4.821071 s Rate: 4.1 (M/sec) 5
+
+with inline
+$ ./levtestarr
+[dist_array]      distance: 5 expect: 5
+[dist_simple_arr] distance: 5 expect: 5
+[dist_array]      iters: 20 M Elapsed: 3.347180 s Rate: 6.0 (M/sec) 5
+[dist_simple_arr] iters: 20 M Elapsed: 4.861788 s Rate: 4.1 (M/sec) 5
+
+with pre/suffix
+$ ./levtestarr
+[dist_array]      distance: 5 expect: 5
+[dist_simple_arr] distance: 5 expect: 5
+[dist_array]      iters: 20 M Elapsed: 3.457458 s Rate: 5.8 (M/sec) 5
+[dist_simple_arr] iters: 20 M Elapsed: 4.840525 s Rate: 4.1 (M/sec) 5
+
+on stack allocated is faster but wrong
+$ ./levtestarr
+[dist_array]      distance: 6 expect: 5
+[dist_simple_arr] distance: 6 expect: 5
+[dist_array]      iters: 20 M Elapsed: 2.949877 s Rate: 6.8 (M/sec) 6
+[dist_simple_arr] iters: 20 M Elapsed: 4.774059 s Rate: 4.2 (M/sec) 6
+
+
+*/
