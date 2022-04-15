@@ -117,7 +117,7 @@ my $examples3 = [
     '_b_', ],
 ];
 
-if (0) {
+if (1) {
     my $a = "aabbc";
     my $b = "aabcc";
     #my $a = "a";
@@ -139,7 +139,7 @@ if (0) {
     );
 }
 
-if (0) {
+if (1) {
   for my $example (@$examples1) {
     my $a = $example->[0];
     my $b = $example->[1];
@@ -160,7 +160,7 @@ if (0) {
   }
 }
 
-if (0) {
+if (1) {
   for my $example (@$examples2) {
     my $a = $example->[0];
     my $b = $example->[1];
@@ -182,7 +182,7 @@ if (0) {
 }
 
 
-if (0) {
+if (1) {
   for my $example (@$examples3) {
     my $a = $example->[0];
     my $b = $example->[1];
@@ -204,7 +204,7 @@ if (0) {
 }
 
 # test prefix-suffix optimization
-if (0) {
+if (1) {
   my $prefix = 'a';
   my $infix  = 'b';
   my $suffix = 'c';
@@ -242,7 +242,7 @@ if (0) {
 }
 
 # test error-by-one
-if (0) {
+if (1) {
   my $string1 = 'a';
   my $string2 = 'b';
   my @base_lengths = (16, 32, 64, 128, 256);
@@ -302,7 +302,7 @@ if (1) {
 }
 
 # test carry for possible machine words
-if (0) {
+if (1) {
   my $string1 = 'abd';
   my $string2 = 'badc';
   my @base_lengths = (16, 32, 64, 128);
@@ -328,7 +328,7 @@ if (0) {
 }
 
 # HINDI for testing combining characters
-if (0) {
+if (1) {
     my $string1 = 'राज्य';
     my $string2 = 'उसकी';
     my @base_lengths = (16);
@@ -356,7 +356,7 @@ if (0) {
 }
 
 # MEROITIC HIEROGLYPHIC LETTERs
-if (0) {
+if (1) {
     my $string1 = "\x{10980}\x{10981}\x{10983}";
     my $string2 = "\x{10981}\x{10980}\x{10983}\x{10982}";
     my @base_lengths = (16);

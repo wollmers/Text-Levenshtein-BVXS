@@ -27,9 +27,9 @@ static const uint64_t width = _LEVBV_WIDTH;
 //#define _LEVBV_DEBUG
 #ifdef _LEVBV_DEBUG
 
-#define kDisplayWidth 64
+#define kDisplayWidth  _LEVBV_WIDTH
 
-char* pBinFill( long int x, char *so, char fillChar) {
+char* pBinFill( bv_bits x, char *so, char fillChar) {
     char s[ kDisplayWidth + 1 ];
     int  i = kDisplayWidth;
     s[i--] = 0x00;   // terminate string
@@ -42,7 +42,7 @@ char* pBinFill( long int x, char *so, char fillChar) {
     sprintf( so, "%s", s );
     return so;
 }
-//printf("%ld =\t\t%#lx =\t\t0b%s\n",val,val,pBinFill(val,so,'0'));
+
 #endif
 
 /***** Array *****/
@@ -56,10 +56,13 @@ typedef struct {
 */
 inline Array *array_new (int len) {
     Array *array = malloc(1 * sizeof (Array));
-    array->capacity = (len+1)/2;
+    //array->capacity = (len+1)/2;
+    array->capacity = (len+1);
     array->elements = 0;
-    array->keys = calloc((len+1)/2, sizeof (void *));
-    array->lens = calloc((len+1)/2, sizeof (uint32_t *));
+    //array->keys = calloc((len+1)/2, sizeof (void *));
+    array->keys = calloc((len+1), sizeof (void *));
+    //array->lens = calloc((len+1)/2, sizeof (uint32_t *));
+    array->lens = calloc((len+1), sizeof (uint32_t *));
     return array;
 }
 
@@ -78,9 +81,10 @@ inline void array_free (Array *a) {
     if (a) { free(a); }
 }
 
-#ifdef _LEVBV_DEBUG
+//#define _LEVBV_DEBUG_ARRAY
+#ifdef _LEVBV_DEBUG_ARRAY
 
-void array_debug_utf8 (Array *array, char *desc) {
+void array_debug_utf8 (const Array *array, char *desc) {
 
     printf ("=====: %s %d entries\n", desc, array->elements);
 
@@ -127,7 +131,7 @@ inline void hash_setpos (Hash *hash, void *key, uint32_t pos, uint32_t keylen) {
         hash->keys[index] = key;
         hash->lens[index] = keylen;
     }
-    hash->bits[index] |= 0x1ull << (pos % 64);
+    hash->bits[index] |= 0x1ull << (pos % _LEVBV_WIDTH);
 }
 
 inline void hash_setpos_k (
@@ -145,6 +149,7 @@ inline void hash_setpos_k (
         hash->lens[index] = keylen;
     }
 
+    k = (uint32_t)pos / _LEVBV_WIDTH;
     hash->bits[index * kmax + k] |= 0x1ull << (pos % _LEVBV_WIDTH);
 }
 
@@ -159,6 +164,33 @@ inline uint64_t hash_getpos_k (Hash *hash, void *key, uint32_t keylen, uint32_t 
 
     return hash->bits[index * kmax + k];
 }
+
+//#define _LEVBV_DEBUG_HASH
+#ifdef _LEVBV_DEBUG_HASH
+
+void hash_debug_utf8 (Hash *hash, uint32_t kmax) {
+    char so[kDisplayWidth+1]; // working buffer for pBin
+    int index = 0;
+    while (hash->keys[index]) {
+        printf (" length=%3d ", hash->lens[index]);
+        printf ("%s","key:");
+        printf ("%s"," [");
+        for (size_t j = 0; j < hash->lens[index]; j++) {
+                printf("%.1s", hash->keys[index] + j);
+        }
+        printf ("%s  \n","]");
+
+        for (int k = 0; k < kmax; k++) {
+            printf("k: %u ", k);
+            printf("bits: %s \n", pBinFill(hash->bits[index * kmax + k], so, '0'));
+        }
+
+        index++;
+    }
+
+}
+
+#endif
 
 
 /***** Hashi *****/
@@ -231,6 +263,8 @@ inline uint64_t hashi_getpos_k (Hashi *hashi, uint32_t key, uint32_t k, uint32_t
 }
 
 /************************/
+//#define _LEVBV_UTF8_HASH
+#ifdef _LEVBV_UTF8_HASH
 
 static const char allBytesForUTF8[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -243,6 +277,7 @@ static const char allBytesForUTF8[256] = {
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, 4,4,4,4,4,4,4,4,5,5,5,5,6,6,6,6
 };
 
+#endif
 
 /* number of characters */
 /*
@@ -258,11 +293,8 @@ int utf8_strlen(char *s)
 }
 */
 
-/************************/
-
-
-
 /***********************/
+#if _LEVBV_WIDTH == 64
 
 static const uint64_t masks[64] = {
   //0x0000000000000000,
@@ -284,14 +316,36 @@ static const uint64_t masks[64] = {
   0x1fffffffffffffffull,0x3fffffffffffffffull,0x7fffffffffffffffull,0xffffffffffffffffull,
 };
 
+#endif
+
+#if _LEVBV_WIDTH == 32
+
+static const uint32_t masks[32] = {
+  //0x0000000000000000,
+  0x00000001ul,0x00000003ul,0x00000007ul,0x0000000ful,
+  0x0000001ful,0x0000003ful,0x0000007ful,0x000000fful,
+  0x000001fful,0x000003fful,0x000007fful,0x00000ffful,
+  0x00001ffful,0x00003ffful,0x00007ffful,0x0000fffful,
+  0x0001fffful,0x0003fffful,0x0007fffful,0x000ffffful,
+  0x001ffffful,0x003ffffful,0x007ffffful,0x00fffffful,
+  0x01fffffful,0x03fffffful,0x07fffffful,0x0ffffffful,
+  0x1ffffffful,0x3ffffffful,0x7ffffffful,0xfffffffful,
+};
+
+#endif
+
+#ifndef _LEVBV_LOW_CHARS
+    #define _LEVBV_LOW_CHARS 128
+#endif
+
 /*
 int dist_asci_pre (unsigned char * a, unsigned char * b, uint32_t alen, uint32_t blen, int prep) {
 
-    static uint64_t posbits[128] = { 0 };
+    static uint64_t posbits[_LEVBV_LOW_CHARS] = { 0 };
     uint64_t i;
 
     if (prep > 0) {
-        for (i=0; i < 128; i++){
+        for (i=0; i < _LEVBV_LOW_CHARS; i++){
           posbits[i] = 0;
         }
 
@@ -312,10 +366,6 @@ int dist_asci_pre (unsigned char * a, unsigned char * b, uint32_t alen, uint32_t
     return count_bits_fast(~v);
 }
 */
-
-#ifndef _LEVBV_LOW_CHARS
-    #define _LEVBV_LOW_CHARS 128
-#endif
 
 int dist_asci (const char * a, int alen, const char * b,  int blen) {
 
@@ -339,10 +389,10 @@ if (1) {
     // return difference of lengths.
     if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
 
-    static bv_bits posbits[128] = { 0 };
+    static bv_bits posbits[_LEVBV_LOW_CHARS] = { 0 };
     uint64_t i;
 
-    for (i=0; i < 128; i++){ posbits[i] = 0; }
+    for (i=0; i < _LEVBV_LOW_CHARS; i++){ posbits[i] = 0; }
 
     int m = amax-amin +1;
 
@@ -371,6 +421,8 @@ if (1) {
     }
     return diff;
 }
+
+#ifdef _LEVBV_UTF8_HASH
 
 // use utf-8 sequence as uint32_t key
 int dist_utf8_i (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen) {
@@ -425,6 +477,8 @@ int dist_utf8_i (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t b
     }
     return diff;
 }
+
+#endif
 
 // utf-8 to UCS-4 wrapper for dist_uni
 int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
@@ -551,7 +605,7 @@ if (1) {
 
     int m = amax-amin + 1;
 
-  if ( 1 && ((amax - amin) < width) ) {
+  if ( 0 && ((amax - amin) < width) ) {
 
     #ifdef _LEVBV_DEBUG
     printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
@@ -663,7 +717,8 @@ if (1) {
     int low_chars = _LEVBV_LOW_CHARS;
     bv_bits *posbits
         = (bv_bits *) alloca ( _LEVBV_LOW_CHARS * kmax *  sizeof(bv_bits) );
-    //static bv_bits posbits[ _LEVBV_LOW_CHARS * 1 ];
+
+    //bv_bits posbits[ _LEVBV_LOW_CHARS * kmax ];
 
     int i;
     int k;
@@ -761,14 +816,16 @@ if (1) {
                 // y = posbits[(unsigned int)b[i]][k];
                 y = posbits[(unsigned int)b[i] * kmax + k];
 
-                #ifdef _LEVBV_DEBUG
-                co[0] = b[i];
-                printf("pos: %s \n", pBinFill(y,so,'0'));
-                #endif
+
             }
             else {
                 y = hashi_getpos_k (&hashi, b[i], k, kmax);
             }
+
+            #ifdef _LEVBV_DEBUG
+            co[0] = b[i];
+            printf("pos: %s \n", pBinFill(y,so,'0'));
+            #endif
 
             X  = y | HNcarry | VNs[k];
             D0 = ((VPs[k] + (X & VPs[k])) ^ VPs[k]) | X;
@@ -786,7 +843,7 @@ if (1) {
             #ifdef _LEVBV_DEBUG
             printf("HP:  %s \n", pBinFill(HP, so, '0'));
             printf("HN:  %s \n", pBinFill(HN, so, '0'));
-            printf("i: %u k: %u diff: %u \n", i, k, diff);
+            printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n", i, k, diff, HPcarry, HNcarry);
             #endif
         }
     }
@@ -891,10 +948,17 @@ if (1) {
 // int dist_arr (const Array *a, int alen, const Array *b, int blen);
 int dist_array (const Array *a, const Array *b ) {
 
+    #ifdef _LEVBV_DEBUG_ARRAY
+    array_debug_utf8 (a, "array1");
+    array_debug_utf8 (b, "array2");
+    #endif
+
     int amin = 0;
     int amax = a->elements - 1;
     int bmin = 0;
     int bmax = b->elements - 1;
+
+    if ((amax < amin) || (bmax < bmin)) { return abs(a->elements - b->elements); }
 
 if (1) {
     // int array_key_compare(Array *a, Array *b, int i, int j)
@@ -943,8 +1007,10 @@ if (1) {
     uint32_t keylen;
     for (i=0; i < m; i++){
         keylen = a->lens[i+amin];
-          hash_setpos (&hash, a->keys[i+amin], i, keylen);
+        hash_setpos (&hash, a->keys[i+amin], i, keylen);
     }
+
+
 
     int diff = m;
     bv_bits mask = 0x1ull << (m - 1);
@@ -960,10 +1026,11 @@ if (1) {
     for (i=bmin; i <= bmax; i++) {
         y = hash_getpos (&hash, b->keys[i], b->lens[i]);
 
-            #ifdef _LEVBV_DEBUG
-            co[0] = b[i];
-            printf("i: %u posbit for char: %s %s\n", i, co, pBinFill(y,so,'0'));
-            #endif
+        #ifdef _LEVBV_DEBUG
+        //co[0] = b[i];
+        co[0] = b->keys[i];
+        printf("pos: %s \n", pBinFill(y,so,'0'));
+        #endif
 
         bv_bits X  = y | VN;
         bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
@@ -1020,10 +1087,14 @@ if (1) {
     for (i=0; i < m; i++) {
         //keylen = strlen(a[i+amin]);
         keylen = a->lens[i+amin];
-        for (k=0; k < kmax; k++ ) {
+        //for (k=0; k < kmax; k++ ) {
             hash_setpos_k (&hash, a->keys[i+amin], i, keylen, k, kmax);
-        }
+        //}
     }
+
+    #ifdef _LEVBV_DEBUG
+    hash_debug_utf8 (&hash, kmax);
+    #endif
 
     bv_bits mask[kmax];
     for (k=0; k < kmax; k++) { mask[k] = 0; }
@@ -1056,7 +1127,8 @@ if (1) {
 
     for (i=bmin; i <= bmax; i++) {
         #ifdef _LEVBV_DEBUG
-        co[0] = b[i];
+        //co[0] = b[i];
+        co[0] = b->keys[i];
         printf("i: %u char: %s \n", i, co );
         #endif
 
@@ -1066,7 +1138,8 @@ if (1) {
             y = hash_getpos_k (&hash, b->keys[i], b->lens[i], k, kmax);
 
             #ifdef _LEVBV_DEBUG
-            co[0] = b[i];
+            //co[0] = b[i];
+            co[0] = b->keys[i];
             printf("pos: %s \n", pBinFill(y,so,'0'));
             #endif
 
@@ -1086,7 +1159,7 @@ if (1) {
             #ifdef _LEVBV_DEBUG
             printf("HP:  %s \n", pBinFill(HP, so, '0'));
             printf("HN:  %s \n", pBinFill(HN, so, '0'));
-            printf("i: %u k: %u diff: %u \n", i, k, diff);
+            printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n", i, k, diff, HPcarry, HNcarry);
             #endif
         }
     }
@@ -1097,6 +1170,11 @@ if (1) {
 
 int
 dist_simple_arr( const Array *a, const Array *b ) {
+
+    #ifdef _LEVBV_DEBUG_ARRAY
+    array_debug_utf8 (a, "array1");
+    array_debug_utf8 (b, "array2");
+    #endif
 
     int amin = 0;
     int amax = a->elements - 1;

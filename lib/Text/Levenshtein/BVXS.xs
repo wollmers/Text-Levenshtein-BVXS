@@ -2,8 +2,10 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "src/levbvarr.h"
-#include "src/levbvarr.c"
+#include "src/levbv.h"
+#include "src/levbv.c"
+
+#define _LEVBV_FOR_PERL
 
 // https://docs.mojolicious.org/perlguts#How-do-I-pass-a-Perl-string-to-a-C-library
 

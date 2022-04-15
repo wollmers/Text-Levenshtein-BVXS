@@ -82,7 +82,7 @@ int main (void) {
     uint32_t utf_len2 = strlen(utf_str2);
 
     const char delim[] = " ";
-    Array *array1 = array_new (utf_len1);
+    Array *array1 = array_new ((utf_len1+1)/2);
 /*
     Array array1;
     array1.capacity = (utf_len1+1)/2;
@@ -99,13 +99,12 @@ int main (void) {
       array1.lens[i] = 0;
     }
 */
-
     array1->elements = split_utf8 (array1, utf_str1, utf_len1, delim);
     #ifdef _LEVBV_DEBUG_ARRAY
     array_debug_utf8 (array1, "array1");
     #endif
 
-    Array *array2 = array_new (utf_len2);
+    Array *array2 = array_new ((utf_len2+1)/2);
 /*
     Array array2;
     array2.capacity = (utf_len2+1)/2;
@@ -120,7 +119,6 @@ int main (void) {
       array2.lens[i] = 0;
     }
 */
-
     array2->elements = split_utf8 (array2, utf_str2, utf_len2, delim);
     #ifdef _LEVBV_DEBUG_ARRAY
     array_debug_utf8 (array2, "array2");
@@ -163,7 +161,7 @@ if ( 1 && bench_on ) {
           distance = dist_array ( array1, array2 );
         }
         else {
-          distance2 = dist_array ( array2, array1 );
+          distance2 = dist_array (array2, array1 );
         }
       }
     }

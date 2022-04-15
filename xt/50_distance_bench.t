@@ -118,6 +118,38 @@ if (1) {
     });
 }
 
+if (1) {
+    cmpthese( -1, {
+       'TL::BVXS_arr_ascii' => sub {
+            Text::Levenshtein::BVXS::distance_arr(@data_ascii)
+        },
+       #'TL::BVXS_arr_simple' => sub {
+       #     Text::Levenshtein::BVXS::simple_arr(@data_ascii)
+       # },
+       'TL::BVXS_arr_uni' => sub {
+            Text::Levenshtein::BVXS::distance_arr(@data_uni)
+        },
+       'TL::BVXS_arr_l52' => sub {
+            Text::Levenshtein::BVXS::distance_arr(@data2)
+        },
+        'TL::BVXS_arr_l68' => sub {
+            Text::Levenshtein::BVXS::distance_arr(@data_l68)
+        },
+        'TL::Flex_ascii' => sub {
+            &Text::Levenshtein::Flexible::levenshtein(@strings_ascii)
+        },
+        'TL::Flex_uni' => sub {
+            &Text::Levenshtein::Flexible::levenshtein(@strings_uni)
+        },
+        'TL::Flex_l52' => sub {
+            &Text::Levenshtein::Flexible::levenshtein(@strings2)
+        },
+        'TL::Flex_l68' => sub {
+            &Text::Levenshtein::Flexible::levenshtein(@strings_l68)
+        },
+    });
+}
+
 =pod
 version 0.06
 Text::Levenshtein::BV:       4
@@ -336,4 +368,76 @@ TL::Flex_ascii  3884984/s        2908%        1645%         389%          75%   
 TL::BVXS_simple 5293291/s        3998%        2277%         567%         138%         117%            36%              --         -32%           -38%
 TL::BVXS_uni    7839820/s        5970%        3420%         888%         253%         222%           102%             48%           --            -7%
 TL::BVXS_ascii  8469267/s        6458%        3703%         967%         282%         248%           118%             60%           8%             --
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ time perl xt/50_distance_bench.t
+                     Rate TL::Flex_l68 TL::Flex_l52 TL::BVXS_l68 TL::BVXS_l52 TL::Flex_uni TL::Flex_ascii TL::BVXS_simple TL::BVXS_uni TL::BVXS_ascii
+TL::Flex_l68     127999/s           --         -43%         -83%         -94%         -95%           -97%            -98%         -98%           -98%
+TL::Flex_l52     225467/s          76%           --         -71%         -90%         -91%           -94%            -96%         -97%           -97%
+TL::BVXS_l68     771011/s         502%         242%           --         -66%         -71%           -81%            -85%         -89%           -91%
+TL::BVXS_l52    2248784/s        1657%         897%         192%           --         -15%           -43%            -56%         -69%           -72%
+TL::Flex_uni    2632788/s        1957%        1068%         241%          17%           --           -33%            -49%         -64%           -68%
+TL::Flex_ascii  3957601/s        2992%        1655%         413%          76%          50%             --            -23%         -46%           -51%
+TL::BVXS_simple 5144882/s        3919%        2182%         567%         129%          95%            30%              --         -29%           -37%
+TL::BVXS_uni    7281777/s        5589%        3130%         844%         224%         177%            84%             42%           --           -11%
+TL::BVXS_ascii  8143526/s        6262%        3512%         956%         262%         209%           106%             58%          12%             --
+                        Rate TL::BVXS_arr_l68 TL::BVXS_arr_l52 TL::Flex_l68 TL::Flex_l52 TL::BVXS_arr_ascii TL::BVXS_arr_uni TL::Flex_uni TL::Flex_ascii
+TL::BVXS_arr_l68     44246/s               --             -58%         -66%         -80%               -96%             -96%         -98%           -99%
+TL::BVXS_arr_l52    104261/s             136%               --         -19%         -54%               -91%             -91%         -96%           -97%
+TL::Flex_l68        129153/s             192%              24%           --         -43%               -89%             -89%         -95%           -97%
+TL::Flex_l52        224877/s             408%             116%          74%           --               -80%             -80%         -91%           -94%
+TL::BVXS_arr_ascii 1124391/s            2441%             978%         771%         400%                 --              -0%         -55%           -70%
+TL::BVXS_arr_uni   1124392/s            2441%             978%         771%         400%                 0%               --         -55%           -70%
+TL::Flex_uni       2502283/s            5555%            2300%        1837%        1013%               123%             123%           --           -33%
+TL::Flex_ascii     3714590/s            8295%            3463%        2776%        1552%               230%             230%          48%             --
+
+real	0m35.012s
+user	0m34.962s
+sys	0m0.043s
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtestarr
+[dist_array]      distance: 5 expect: 5
+[dist_simple_arr] distance: 5 expect: 5
+[dist_array]      iters: 20 M Elapsed: 3.224419 s Rate: 6.2 (M/sec) 5
+[dist_simple_arr] iters: 20 M Elapsed: 4.897053 s Rate: 4.1 (M/sec) 5
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ ./levtest
+[dist_asci]     distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_uni]      distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_asci]     iters: 20 M Elapsed: 0.773462 s Rate: 25.9 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 1.662071 s Rate: 12.0 (M/sec) 4
+[dist_uni]      iters: 20 M Elapsed: 1.087365 s Rate: 18.4 (M/sec) 4
+[dist_hybrid]   iters: 20 M Elapsed: 0.905256 s Rate: 22.1 (M/sec) 4 ***
+[dist_simple]   iters: 20 M Elapsed: 2.260686 s Rate: 8.8 (M/sec) 4
+[dist_hybrid_l52] iters: 1 M Elapsed: 0.229030 s Rate: 4.4 (M/sec) 2 ***
+[dist_simple_l52] iters: 1 M Elapsed: 3.083937 s Rate: 0.3 (M/sec) 2
+[dist_hybrid_l68] iters: 1 M Elapsed: 1.071402 s Rate: 0.9 (M/sec) 2 ===
+[dist_simple_l68] iters: 1 M Elapsed: 5.350672 s Rate: 0.2 (M/sec) 2
+Total: 16.423881 seconds
+
+# only m > width
+
+[dist_asci]     iters: 20 M Elapsed: 0.777280 s Rate: 25.7 (M/sec) 4
+[dist_utf8_ucs] iters: 20 M Elapsed: 8.036162 s Rate: 2.5 (M/sec) 4
+[dist_uni]      iters: 20 M Elapsed: 1.104977 s Rate: 18.1 (M/sec) 4
+[dist_hybrid]   iters: 20 M Elapsed: 7.175726 s Rate: 2.8 (M/sec) 4 ***
+[dist_simple]   iters: 20 M Elapsed: 2.242166 s Rate: 8.9 (M/sec) 4
+[dist_hybrid_l52] iters: 1 M Elapsed: 0.598935 s Rate: 1.7 (M/sec) 2 ***
+[dist_simple_l52] iters: 1 M Elapsed: 3.085380 s Rate: 0.3 (M/sec) 2
+[dist_hybrid_l68] iters: 1 M Elapsed: 1.055666 s Rate: 0.9 (M/sec) 2 ===
+[dist_simple_l68] iters: 1 M Elapsed: 5.312542 s Rate: 0.2 (M/sec) 2
+
 

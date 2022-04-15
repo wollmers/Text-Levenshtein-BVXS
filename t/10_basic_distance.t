@@ -261,6 +261,41 @@ if (1) {
   }
 }
 
+=pod
+not ok 800 - [abd x 22] m: 66, [badc x 17] n: 68 -> 40
+#   Failed test '[abd x 22] m: 66, [badc x 17] n: 68 -> 40'
+#   at t/10_basic_distance_arr.t line 285.
+#          got: '39'
+#     expected: '40'
+
+not ok 805 - [abd x 43] m: 129, [badc x 33] n: 132 -> 77
+#   Failed test '[abd x 43] m: 129, [badc x 33] n: 132 -> 77'
+#   at t/10_basic_distance_arr.t line 285.
+#          got: '65'
+#     expected: '77'
+=cut
+
+if (1) {
+  my $string1 = 'abd';
+  my $string2 = 'badc';
+
+  my $mult1 = 22;
+  my @a = split(//,$string1 x $mult1);
+  my $m = scalar @a;
+
+  my $mult2 = 17;
+  my @b = split(//,$string2 x $mult2);
+  my $n = scalar @b;
+  my $A = join('',@a);
+  my $B = join('',@b);
+  is(
+        &Text::Levenshtein::BVXS::distance($A,$B),
+        distance($A,$B),
+
+        "[$string1 x $mult1] m: $m, [$string2 x $mult2] n: $n -> " . distance($A,$B),
+  );
+}
+
 # test carry for possible machine words
 if (1) {
   my $string1 = 'abd';
