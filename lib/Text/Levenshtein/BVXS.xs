@@ -121,8 +121,8 @@ distance_arr(s1, s2)
             array2->lens[i] = keylen;
         }
 
-        //distance = dist_array ( array1, array2 );
-        distance = dist_simple_arr ( array1, array2 );
+        distance = dist_array ( array1, array2 );
+        //distance = dist_simple_arr ( array1, array2 );
 
         array_free (array1);
         array_free (array2);

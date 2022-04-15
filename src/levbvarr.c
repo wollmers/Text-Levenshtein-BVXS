@@ -24,12 +24,13 @@ extern "C" {
 // width of type bv_bits in bits, mostly 64 bits
 static const uint64_t width = _LEVBV_WIDTH;
 
-//#define _LEVBV_DEBUG
+#define _LEVBV_DEBUG
 #ifdef _LEVBV_DEBUG
 
-#define kDisplayWidth 64
+#define kDisplayWidth _LEVBV_WIDTH
 
-char* pBinFill( long int x, char *so, char fillChar) {
+//char* pBinFill( long int x, char *so, char fillChar) {
+char* pBinFill( bv_bits x, char *so, char fillChar) {
     char s[ kDisplayWidth + 1 ];
     int  i = kDisplayWidth;
     s[i--] = 0x00;   // terminate string
@@ -397,7 +398,7 @@ if (0) {
             #ifdef _LEVBV_DEBUG
             printf("HP:  %s \n", pBinFill(HP, so, '0'));
             printf("HN:  %s \n", pBinFill(HN, so, '0'));
-            printf("i: %u k: %u diff: %u \n", i, k, diff);
+            printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n", i, k, diff, HPcarry, HNcarry);
             #endif
         }
     }
