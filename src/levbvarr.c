@@ -56,10 +56,13 @@ typedef struct {
 */
 inline Array *array_new (int len) {
     Array *array = malloc(1 * sizeof (Array));
-    array->capacity = (len+1)/2;
+    //array->capacity = (len+1)/2;
+    array->capacity = (len+1);
     array->elements = 0;
-    array->keys = calloc((len+1)/2, sizeof (void *));
-    array->lens = calloc((len+1)/2, sizeof (uint32_t *));
+    //array->keys = calloc((len+1)/2, sizeof (void *));
+    array->keys = calloc((len+1), sizeof (void *));
+    //array->lens = calloc((len+1)/2, sizeof (uint32_t *));
+    array->lens = calloc((len+1), sizeof (uint32_t *));
     return array;
 }
 
@@ -80,9 +83,10 @@ inline void array_free (Array *a) {
 
 }
 
-#ifdef _LEVBV_DEBUG
+#define _LEVBV_DEBUG_ARRAY
+#ifdef _LEVBV_DEBUG_ARRAY
 
-void array_debug_utf8 (Array *array, char *desc) {
+void array_debug_utf8 (const Array *array, char *desc) {
 
     printf ("=====: %s %d entries\n", desc, array->elements);
 
@@ -188,12 +192,19 @@ static const uint64_t masks[64] = {
 // int dist_arr (const Array *a, int alen, const Array *b, int blen);
 int dist_array (const Array *a, const Array *b ) {
 
+    #ifdef _LEVBV_DEBUG_ARRAY
+    array_debug_utf8 (a, "array1");
+    array_debug_utf8 (b, "array2");
+    #endif
+
     int amin = 0;
     int amax = a->elements - 1;
     int bmin = 0;
     int bmax = b->elements - 1;
 
-if (1) {
+    if ((amax < amin) || (bmax < bmin)) { return abs(a->elements - b->elements); }
+
+if (0) {
     // int array_key_compare(Array *a, Array *b, int i, int j)
     while (amin <= amax && bmin <= bmax && array_key_compare(a, b, amin, bmin) ) {
         amin++;
@@ -257,10 +268,11 @@ if (1) {
     for (i=bmin; i <= bmax; i++) {
         y = hash_getpos (&hash, b->keys[i], b->lens[i]);
 
-            #ifdef _LEVBV_DEBUG
-            co[0] = b[i];
-            printf("i: %u posbit for char: %s %s\n", i, co, pBinFill(y,so,'0'));
-            #endif
+        #ifdef _LEVBV_DEBUG
+        //co[0] = b[i];
+        co[0] = b->keys[i];
+        printf("i: %u posbit for char: %s %s\n", i, co, pBinFill(y,so,'0'));
+        #endif
 
         bv_bits X  = y | VN;
         bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
@@ -353,7 +365,8 @@ if (1) {
 
     for (i=bmin; i <= bmax; i++) {
         #ifdef _LEVBV_DEBUG
-        co[0] = b[i];
+        //co[0] = b[i];
+        co[0] = b->keys[i];
         printf("i: %u char: %s \n", i, co );
         #endif
 
@@ -363,7 +376,8 @@ if (1) {
             y = hash_getpos_k (&hash, b->keys[i], b->lens[i], k, kmax);
 
             #ifdef _LEVBV_DEBUG
-            co[0] = b[i];
+            //co[0] = b[i];
+            co[0] = b->keys[i];
             printf("pos: %s \n", pBinFill(y,so,'0'));
             #endif
 
@@ -399,12 +413,17 @@ if (1) {
 int
 dist_simple_arr( const Array *a, const Array *b ) {
 
+    #ifdef _LEVBV_DEBUG_ARRAY
+    array_debug_utf8 (a, "array1");
+    array_debug_utf8 (b, "array2");
+    #endif
+
     int amin = 0;
     int amax = a->elements - 1;
     int bmin = 0;
     int bmax = b->elements - 1;
 
-if (1) {
+if (0) {
     while (amin <= amax && bmin <= bmax && array_key_compare(a, b, amin, bmin) ) {
         amin++;
         bmin++;

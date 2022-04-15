@@ -1,8 +1,10 @@
 package Text::Levenshtein::BVXS;
 
-use 5.008;
+use 5.010;
 use strict;
 use warnings;
+
+use utf8;
 
 our $VERSION = '0.01';
 
@@ -14,7 +16,7 @@ require DynaLoader;
 use Autoloader;
 
 our @ISA = qw(Exporter DynaLoader);
-our @EXPORT = qw( distance simple noop noutf);
+our @EXPORT = qw( distance simple noop noutf distance_arr);
 bootstrap Text::Levenshtein::BVXS $VERSION;
 
 

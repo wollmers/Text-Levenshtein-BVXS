@@ -101,7 +101,7 @@ int main (void) {
 */
 
     array1->elements = split_utf8 (array1, utf_str1, utf_len1, delim);
-    #ifdef _LEVBV_DEBUG
+    #ifdef _LEVBV_DEBUG_ARRAY
     array_debug_utf8 (array1, "array1");
     #endif
 
@@ -122,7 +122,7 @@ int main (void) {
 */
 
     array2->elements = split_utf8 (array2, utf_str2, utf_len2, delim);
-    #ifdef _LEVBV_DEBUG
+    #ifdef _LEVBV_DEBUG_ARRAY
     array_debug_utf8 (array2, "array2");
     #endif
 
