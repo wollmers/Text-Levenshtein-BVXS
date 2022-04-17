@@ -24,6 +24,7 @@ int main (void) {
     double elapsed;
     double total = 0;
     double rate;
+    double el_rate;
 
 
     int bench_on = 1;
@@ -71,14 +72,14 @@ int main (void) {
     int distance2;
 
     if (1) {
-    distance = dist_asci (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
-    printf("[dist_asci]     distance: %u expect: 4\n", distance);
+    distance = dist_bytes (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
+    printf("[dist_bytes]    distance: %u expect: 4\n", distance);
 
     distance = dist_utf8_ucs (utf_str1, utf_len1, utf_str2, utf_len2);
     printf("[dist_utf8_ucs] distance: %u expect: 4\n", distance);
 
-    distance = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
-    printf("[dist_uni]      distance: %u expect: 4\n", distance);
+    //distance = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
+    //printf("[dist_uni]      distance: %u expect: 4\n", distance);
 
     //printf("[dist_hybrid]   str1: 0123456789 str2: 01234567890 \n");
     //printf("[dist_hybrid]   str1: %s str2: %s \n", utf_str1, utf_str2);
@@ -138,7 +139,7 @@ int main (void) {
     printf("[dist_hybrid_l68] distance: %u expect: 2\n\n", distance);
     }
 
-    /* ########## dist_asci ########## */
+    /* ########## dist_bytes ########## */
 if ( 1 && bench_on ) {
     tic = clock();
 
@@ -147,10 +148,10 @@ if ( 1 && bench_on ) {
     for (megacount = 0; megacount < megaiters; megacount++) {
       for (count = 0; count < iters; count++) {
         if (count % 2) {
-          distance = dist_asci (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
+          distance = dist_bytes (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
         }
         else {
-          distance2 = dist_asci (ascii_str2, ascii_len2, ascii_str1, ascii_len1);
+          distance2 = dist_bytes (ascii_str2, ascii_len2, ascii_str1, ascii_len1);
         }
       }
     }
@@ -159,9 +160,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * ascii_len2;
 
-    printf("[dist_asci]     iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, ((distance+distance2)/2));
+    printf("[dist_bytes]      iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, ((distance+distance2)/2));
 }
 
     /* ########## dist_utf8_ucs ########## */
@@ -180,30 +182,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * utf_len2;
 
-    printf("[dist_utf8_ucs] iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
-}
-
-    /* ########## dist_uni ########## */
-if ( 1 && bench_on ) {
-    tic = clock();
-
-    megaiters = 20;
-
-    for (megacount = 0; megacount < megaiters; megacount++) {
-      for (count = 0; count < iters; count++) {
-          distance = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
-      }
-    }
-
-    toc = clock();
-    elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
-    total += elapsed;
-    rate    = (double)megaiters / (double)elapsed;
-
-    printf("[dist_uni]      iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_utf8_ucs]   iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
     /* ########## dist_hybrid ########## */
@@ -222,9 +204,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * b_chars;
 
-    printf("[dist_hybrid]   iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_hybrid]     iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
     /* ########## dist_simple ########## */
@@ -243,9 +226,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * b_chars;
 
-    printf("[dist_simple]   iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_simple]     iters: %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
     /* ########## dist_hybrid_l52 ########## */
@@ -264,9 +248,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * b_chars_l52;
 
-    printf("[dist_hybrid_l52] iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_hybrid_l52] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
     /* ########## dist_simple_l52 ########## */
@@ -285,9 +270,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * b_chars_l52;
 
-    printf("[dist_simple_l52] iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_simple_l52] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
     /* ########## dist_hybrid_l68 ########## */
@@ -306,9 +292,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * b_chars_l68;
 
-    printf("[dist_hybrid_l68] iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_hybrid_l68] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
     /* ########## dist_simple_l68 ########## */
@@ -327,9 +314,10 @@ if ( 1 && bench_on ) {
     elapsed = (double)(toc - tic) / (double)CLOCKS_PER_SEC;
     total += elapsed;
     rate    = (double)megaiters / (double)elapsed;
+    el_rate = rate * b_chars_l68;
 
-    printf("[dist_simple_l68] iters: %u M Elapsed: %f s Rate: %.1f (M/sec) %u\n",
-        megaiters, elapsed, rate, distance);
+    printf("[dist_simple_l68] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+        megaiters, elapsed, rate, el_rate, distance);
 }
 
 

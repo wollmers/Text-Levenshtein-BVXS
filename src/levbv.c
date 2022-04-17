@@ -56,12 +56,9 @@ typedef struct {
 */
 inline Array *array_new (int len) {
     Array *array = malloc(1 * sizeof (Array));
-    //array->capacity = (len+1)/2;
     array->capacity = (len+1);
     array->elements = 0;
-    //array->keys = calloc((len+1)/2, sizeof (void *));
     array->keys = calloc((len+1), sizeof (void *));
-    //array->lens = calloc((len+1)/2, sizeof (uint32_t *));
     array->lens = calloc((len+1), sizeof (uint32_t *));
     return array;
 }
@@ -187,11 +184,9 @@ void hash_debug_utf8 (Hash *hash, uint32_t kmax) {
 
         index++;
     }
-
 }
 
 #endif
-
 
 /***** Hashi *****/
 
@@ -231,14 +226,7 @@ inline void hashi_setpos_k (Hashi *hashi, uint32_t key, uint32_t pos, uint32_t k
     if (hashi->ikeys[index] == 0) {
         hashi->ikeys[index] = key;
     }
-    //hashi->bits[index][k] |= 0x1ull << (pos % _LEVBV_WIDTH);
-    /*
-    int pos_index = index * kmax + k;
-    uint8_t ch = index;
-    char dest[] = {(char)ch, 0};
-    printf("[dist_hybrid] setpos   index * kmax + k * kmax + k: %u char: %s \n",
-                    pos_index, dest);
-    */
+    k = (uint32_t)pos / _LEVBV_WIDTH;
     hashi->bits[index * kmax + k] |= 0x1ull << (pos % _LEVBV_WIDTH);
 }
 
@@ -258,40 +246,8 @@ inline uint64_t hashi_getpos_k (Hashi *hashi, uint32_t key, uint32_t k, uint32_t
            && ((uint32_t)hashi->ikeys[index] != key) ) {
         index++;
     }
-    // return hashi->bits[index][k];
     return hashi->bits[index * kmax + k];
 }
-
-/************************/
-//#define _LEVBV_UTF8_HASH
-#ifdef _LEVBV_UTF8_HASH
-
-static const char allBytesForUTF8[256] = {
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, 4,4,4,4,4,4,4,4,5,5,5,5,6,6,6,6
-};
-
-#endif
-
-/* number of characters */
-/*
-int utf8_strlen(char *s)
-{
-    int count = 0;
-    int i = 0;
-
-    while (u8_nextchar(s, &i) != 0)
-        count++;
-
-    return count;
-}
-*/
 
 /***********************/
 #if _LEVBV_WIDTH == 64
@@ -338,43 +294,14 @@ static const uint32_t masks[32] = {
     #define _LEVBV_LOW_CHARS 128
 #endif
 
-/*
-int dist_asci_pre (unsigned char * a, unsigned char * b, uint32_t alen, uint32_t blen, int prep) {
-
-    static uint64_t posbits[_LEVBV_LOW_CHARS] = { 0 };
-    uint64_t i;
-
-    if (prep > 0) {
-        for (i=0; i < _LEVBV_LOW_CHARS; i++){
-          posbits[i] = 0;
-        }
-
-    // 5 instr * ceil(m/w) * m
-        for (i=0; i < alen; i++){
-            posbits[(unsigned int)a[i]] |= 0x1ull << (i % width);
-        }
-    }
-
-    uint64_t v = ~0ull;
-    // 7 instr * ceil(m/w)*n
-    for (i=0; i < blen; i++){
-      uint64_t p = posbits[(unsigned int)b[i]];
-      uint64_t u = v & p;
-      v = (v + u) | (v - u);
-    }
-    // 12 instr * ceil(m/w)
-    return count_bits_fast(~v);
-}
-*/
-
-int dist_asci (const char * a, int alen, const char * b,  int blen) {
+int dist_bytes (const char * a, int alen, const char * b,  int blen) {
 
     int amin = 0;
     int amax = alen-1;
     int bmin = 0;
     int bmax = blen-1;
 
-if (1) {
+//if (1) {
     while (amin <= amax && bmin <= bmax && a[amin] == b[bmin]) {
         amin++;
         bmin++;
@@ -383,113 +310,127 @@ if (1) {
         amax--;
         bmax--;
     }
-}
+//}
 
     // if one of the sequences is a complete subset of the other,
     // return difference of lengths.
     if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
 
-    static bv_bits posbits[_LEVBV_LOW_CHARS] = { 0 };
-    uint64_t i;
+    int m = amax-amin + 1;
 
-    for (i=0; i < _LEVBV_LOW_CHARS; i++){ posbits[i] = 0; }
+    if ((amax - amin) < width) {
 
-    int m = amax-amin +1;
+        // for codepoints in the low range we use fast table lookup
+        //int low_chars = 256;
+        //static bv_bits posbits[256] = { 0 };
+        bv_bits posbits[128] = { 0 };
+        int i;
 
-    for (i=0; i < m; i++){
-        posbits[(unsigned int)a[i+amin]] |= 0x1ull << i;
-    }
+        //for (i=0; i < 128; i++) { posbits[i] = 0; }
 
-    int diff = m;
-    bv_bits mask = 1 << (m - 1);
-    bv_bits VP   = masks[m - 1];
-    bv_bits VN   = 0;
-
-    int n = bmax-bmin +1;
-    // for my $j ( $bmin .. $bmax ) {
-    for (i=0; i < n; i++){
-        bv_bits y = posbits[(unsigned int)b[i+bmin]];
-        bv_bits X  = y | VN;
-        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
-        bv_bits HN = VP & D0;
-        bv_bits HP = VN | ~(VP|D0);
-        X  = (HP << 1) | 1;
-        VN = X & D0;
-        VP = (HN << 1) | ~(X | D0);
-        if (HP & mask) { diff++; }
-        if (HN & mask) { diff--; }
-    }
-    return diff;
-}
-
-#ifdef _LEVBV_UTF8_HASH
-
-// use utf-8 sequence as uint32_t key
-int dist_utf8_i (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen) {
-
-    Hashi hashi;
-    uint32_t ikeys[alen+1];
-    bv_bits bits[alen+1];
-    hashi.ikeys = ikeys;
-    hashi.bits  = bits;
-
-    int32_t i;
-    for (i=0;i<=alen;i++) {
-        hashi.ikeys[i] = 0;
-        hashi.bits[i]  = 0;
-    }
-
-    uint32_t q, keylen, m;
-    m = 0;
-    uint32_t key, k;
-    //for (i=0,q=0; (unsigned char)a[q] != '\0'; i++,q+=keylen){
-    for (i=0,q=0; q < alen; i++,q+=keylen){
-        m++;
-        keylen = allBytesForUTF8[(unsigned int)(unsigned char)a[q]];
-        for (k=0,key=0; k < keylen; k++) {
-          key = key << 8 | a[q+k];
-        }
-        hashi_setpos (&hashi, key, i);
-    }
-
-    int diff = m;
-    bv_bits mask = 1 << (m - 1);
-    bv_bits VP   = masks[m - 1];
-    bv_bits VN   = 0;
-
-    keylen = 0;
-    for (i=0,q=0; q < blen; i++,q+=keylen){
-        keylen = allBytesForUTF8[(unsigned int)(unsigned char)b[q]];
-        for (k=0,key=0; k < keylen; k++) {
-          key = key << 8 | b[q+k];
+        for (i=0; i < m; i++) {
+            posbits[(unsigned int)a[i+amin]] |= 0x1ull << i;
         }
 
-        bv_bits y  = hashi_getpos (&hashi, key);
-        bv_bits X  = y | VN;
-        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
-        bv_bits HN = VP & D0;
-        bv_bits HP = VN | ~(VP|D0);
-        X  = (HP << 1) | 1;
-        VN = X & D0;
-        VP = (HN << 1) | ~(X | D0);
-        if (HP & mask) { diff++; }
-        if (HN & mask) { diff--; }
+        int diff = m;
+        bv_bits mask = 0x1ull << (m - 1);
+        bv_bits VP   = masks[m - 1];
+        bv_bits VN   = 0;
+
+        bv_bits y;
+        for (i=bmin; i <= bmax; i++) {
+            y = posbits[(unsigned int)b[i]];
+
+            bv_bits X  = y | VN;
+            bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+            bv_bits HN = VP & D0;
+            bv_bits HP = VN | ~(VP|D0);
+            X  = (HP << 1) | 0x1ull;
+            VN = X & D0;
+            VP = (HN << 1) | ~(X | D0);
+            if (HP & mask) { diff++; }
+            if (HN & mask) { diff--; }
+        }
+        return diff;
     }
-    return diff;
+    else {
+
+        int diff = m;
+
+        int kmax = (m) / width;
+        if ( m % width ) { kmax++; }
+
+        // for codepoints in the low range we use fast table lookup
+        //int low_chars = 256;
+        bv_bits *posbits
+            = (bv_bits *) alloca ( 128 * kmax *  sizeof(bv_bits) );
+
+        int i;
+        int k;
+
+        for (i=0; i < 128; i++) {
+            for (k=0; k < kmax; k++) {
+                posbits[i * kmax + k] = 0;
+            }
+        }
+
+        for (i=0; i < m; i++) {
+            posbits[ (unsigned int)a[i+amin] * kmax + (unsigned int)(i/width) ]
+                |= 0x1ull << (i % width);
+        }
+
+        bv_bits mask[kmax];
+        for (k=0; k < kmax; k++) { mask[k] = 0; }
+        mask[kmax-1] = 0x1ull << ((m-1) % width);
+
+        // bv_bits VP   = masks[m - 1];
+        bv_bits VPs[kmax];
+        for (k=0; k < kmax; k++) { VPs[k] = 0xffffffffffffffffull; }
+        VPs[kmax-1] =  masks[ (unsigned int)((m-1) % width) ];
+
+        bv_bits VNs[kmax];
+        for (k=0; k < kmax; k++) { VNs[k] = 0; }
+
+        bv_bits y, X, D0, HN, HP;
+
+        bv_bits HNcarry;
+        bv_bits HPcarry;
+
+        for (i=bmin; i <= bmax; i++) {
+
+            HNcarry = 0;
+            HPcarry = 1;
+            for (int k=0; k < kmax; k++ ) {
+                y = posbits[(unsigned int)b[i] * kmax + k];
+
+                X  = y | HNcarry | VNs[k];
+                D0 = ((VPs[k] + (X & VPs[k])) ^ VPs[k]) | X;
+                HN = VPs[k] & D0;
+                HP = VNs[k] | ~(VPs[k] | D0);
+                X  = (HP << 1) | HPcarry;
+                HPcarry = HP >> (width-1) & 0x1ull;
+                VNs[k]  = (X & D0);
+                VPs[k]  = (HN << 1) | (HNcarry) | ~(X | D0);
+                HNcarry = HN >> (width-1) & 0x1ull;
+
+                if      (HP & mask[k]) { diff++; }
+                else if (HN & mask[k]) { diff--; }
+            }
+        }
+        return diff;
+    }
 }
 
-#endif
 
 // utf-8 to UCS-4 wrapper for dist_uni
 int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
 
     uint32_t a_ucs[(alen+1)*4];
     uint32_t b_ucs[(blen+1)*4];
-    int a_chars;
-    int b_chars;
-    // int u8_toucs(u_int32_t *dest, int sz, char *src, int srcsz)
-    a_chars = u8_toucs(a_ucs, (alen+1)*4, a, alen);
-    b_chars = u8_toucs(b_ucs, (blen+1)*4, b, blen);
+    //int a_chars;
+    //int b_chars;
+    int a_chars = u8_toucs(a_ucs, (alen+1)*4, a, alen);
+    int b_chars = u8_toucs(b_ucs, (blen+1)*4, b, blen);
 
     int diff;
     //diff = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
@@ -509,75 +450,11 @@ int dist_simple_utf8 (char * a, uint32_t alen, char * b, uint32_t blen) {
     b_chars = u8_toucs(b_ucs, (blen+1)*4, b, blen);
 
     int diff;
-    //diff = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
     diff = dist_simple(a_ucs, a_chars, b_ucs, b_chars);
 
     return diff;
 }
 
-// use uni codepoints as uint32_t key
-//int dist_uni (const UV *a, int alen, const UV *b, int blen) {
-int dist_uni (const uint32_t *a, int alen, const uint32_t *b, int blen) {
-
-    int amin = 0;
-    int amax = alen-1;
-    int bmin = 0;
-    int bmax = blen-1;
-
-if (1) {
-    while (amin <= amax && bmin <= bmax && a[amin] == b[bmin]) {
-        amin++;
-        bmin++;
-    }
-    while (amin <= amax && bmin <= bmax && a[amax] == b[bmax]) {
-        amax--;
-        bmax--;
-    }
-}
-
-    // if one of the sequences is a complete subset of the other,
-    // return difference of lengths.
-    if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
-
-    int m = amax-amin + 1;
-
-    Hashi hashi;
-    uint32_t ikeys[m+1];
-    bv_bits bits[m+1];
-    hashi.ikeys = ikeys;
-    hashi.bits  = bits;
-
-    int32_t i;
-    for (i=0;i <= m;i++) {
-        hashi.ikeys[i] = 0;
-        hashi.bits[i]  = 0;
-    }
-
-    for (i=0; i < m; i++) {
-        hashi_setpos (&hashi, a[i+amin], i);
-    }
-
-    int diff = m;
-    bv_bits mask = 1 << (m - 1);
-    bv_bits VP   = masks[m - 1];
-    bv_bits VN   = 0;
-
-    int n = bmax-bmin +1;
-
-    for (i=0; i < n; i++){
-        bv_bits y = hashi_getpos (&hashi, b[i+bmin]);
-        bv_bits X  = y | VN;
-        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
-        bv_bits HN = VP & D0;
-        bv_bits HP = VN | ~(VP|D0);
-        X  = (HP << 1) | 1;
-        VN = X & D0;
-        VP = (HN << 1) | ~(X | D0);
-        if (HP & mask) { diff++; }
-        if (HN & mask) { diff--; }
-    }
-    return diff;
-}
 
 // use uni codepoints as uint32_t key
 // or ascii table
@@ -588,7 +465,6 @@ int dist_hybrid (const uint32_t *a, int alen, const uint32_t *b, int blen) {
     int bmin = 0;
     int bmax = blen-1;
 
-if (1) {
     while (amin <= amax && bmin <= bmax && a[amin] == b[bmin]) {
         amin++;
         bmin++;
@@ -597,7 +473,6 @@ if (1) {
         amax--;
         bmax--;
     }
-}
 
     // if one of the sequences is a complete subset of the other,
     // return difference of lengths.
@@ -605,251 +480,228 @@ if (1) {
 
     int m = amax-amin + 1;
 
-  if ( 0 && ((amax - amin) < width) ) {
-
-    #ifdef _LEVBV_DEBUG
-    printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
-    printf("m: %u   \n", m);
-    char so[kDisplayWidth+1]; // working buffer for pBin
-    unsigned char co[2] = { 0 };
-    #endif
-
-    // for codepoints in the low range we use fast table lookup
-    int low_chars = _LEVBV_LOW_CHARS;
-    static bv_bits posbits[_LEVBV_LOW_CHARS] = { 0 };
-    int i;
-
-    for (i=0; i < low_chars; i++) { posbits[i] = 0; }
-
-    // m * 9 instr
-    int ascii_chars = 0;
-    for (i=0; i < m; i++) {
-        if (a[i+amin] < low_chars) {
-            //posbits[(unsigned int)a[i+amin]] |= 0x1ull << i;
-            posbits[a[i+amin]] |= 0x1ull << i;
-            ascii_chars++;
-        }
-    }
-
-    // for codepoints in the high range we use sequential search
-    int uni_chars = m - ascii_chars;
-
-    Hashi hashi;
-    uint32_t ikeys[uni_chars+1]; // static ikeys[64+1] ??
-    bv_bits bits[uni_chars+1];   // static ikeys[64+1] ??
-    hashi.ikeys = ikeys;
-    hashi.bits  = bits;
-
-    if (uni_chars > 0) {
-        for (i=0; i <= uni_chars; i++) {
-            hashi.ikeys[i] = 0;
-            hashi.bits[i]  = 0;
-        }
-
-        for (i=0; i < m; i++) {
-            if (a[i+amin] >= low_chars) {
-                hashi_setpos (&hashi, a[i+amin], i);
-            }
-        }
-    }
-
-    int diff = m;
-    bv_bits mask = 0x1ull << (m - 1);
-    bv_bits VP   = masks[m - 1];
-    bv_bits VN   = 0;
-
-    #ifdef _LEVBV_DEBUG
-    printf("mask: %s \n", pBinFill(mask, so, '0'));
-    printf("VP:   %s \n", pBinFill(VP, so, '0'));
-    #endif
-
-    //int n = bmax-bmin +1;
-
-    bv_bits y;
-    //for (i=0; i < n; i++ {
-    for (i=bmin; i <= bmax; i++) {
-        //if (b[i+bmin] < _LEVBV_LOW_CHARS) {
-        if (b[i] < _LEVBV_LOW_CHARS) {
-            //y = posbits[(unsigned int)b[i]];
-            y = posbits[b[i]];
-
-            #ifdef _LEVBV_DEBUG
-            co[0] = b[i];
-            printf("i: %u posbit for char: %s %s\n", i, co, pBinFill(y,so,'0'));
-            #endif
-        }
-        else {
-            y = hashi_getpos (&hashi, b[i]);
-        }
-        bv_bits X  = y | VN;
-        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
-        bv_bits HN = VP & D0;
-        bv_bits HP = VN | ~(VP|D0);
-        X  = (HP << 1) | 0x1ull;
-        VN = X & D0;
-        VP = (HN << 1) | ~(X | D0);
-        if (HP & mask) { diff++; }
-        if (HN & mask) { diff--; }
+    if ((amax - amin) < width) {
 
         #ifdef _LEVBV_DEBUG
-        printf("HP: %s \n", pBinFill(HP,so,'0'));
-        printf("HN: %s \n", pBinFill(HN,so,'0'));
-        printf("i: %u diff: %u \n", i, diff);
+        printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
+        printf("m: %u   \n", m);
+        char so[kDisplayWidth+1]; // working buffer for pBin
+        unsigned char co[2] = { 0 };
         #endif
-    }
-    return diff;
-  }
-  else {
 
-    int diff = m;
+        // for codepoints in the low range we use fast table lookup
+        int low_chars = _LEVBV_LOW_CHARS;
+        static bv_bits posbits[_LEVBV_LOW_CHARS] = { 0 };
+        int i;
 
-    int kmax = (m) / width;
-    if ( m % width ) { kmax++; }
+        for (i=0; i < low_chars; i++) { posbits[i] = 0; }
 
-    #ifdef _LEVBV_DEBUG
-    printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
-    printf("m: %u  kmax: %u \n", m, kmax);
-    char so[kDisplayWidth+1]; // working buffer for pBin
-    unsigned char co[2] = { 0 };
-    #endif
-
-    // for codepoints in the low range we use fast table lookup
-    int low_chars = _LEVBV_LOW_CHARS;
-    bv_bits *posbits
-        = (bv_bits *) alloca ( _LEVBV_LOW_CHARS * kmax *  sizeof(bv_bits) );
-
-    //bv_bits posbits[ _LEVBV_LOW_CHARS * kmax ];
-
-    int i;
-    int k;
-
-    for (i=0; i < low_chars; i++) {
-        for (k=0; k < kmax; k++) {
-            //posbits[i][k] = 0;
-            posbits[i * kmax + k] = 0;
+        // m * 9 instr
+        int ascii_chars = 0;
+        for (i=0; i < m; i++) {
+            if (a[i+amin] < low_chars) {
+                //posbits[(unsigned int)a[i+amin]] |= 0x1ull << i;
+                posbits[a[i+amin]] |= 0x1ull << i;
+                ascii_chars++;
+            }
         }
-    }
 
-    int ascii_chars = 0;
-    for (i=0; i < m; i++) {
-        if ((unsigned int)a[i+amin] < low_chars) {
-            posbits[ (unsigned int)a[i+amin] * kmax + (unsigned int)(i/width) ]
-                |= 0x1ull << (i % width);
-            ascii_chars++;
+        // for codepoints in the high range we use sequential search
+        int uni_chars = m - ascii_chars;
+
+        Hashi hashi;
+        uint32_t ikeys[uni_chars+1]; // static ikeys[64+1] ??
+        bv_bits bits[uni_chars+1];   // static ikeys[64+1] ??
+        hashi.ikeys = ikeys;
+        hashi.bits  = bits;
+
+        if (uni_chars > 0) {
+            for (i=0; i <= uni_chars; i++) {
+                hashi.ikeys[i] = 0;
+                hashi.bits[i]  = 0;
+            }
+
+            for (i=0; i < m; i++) {
+                if (a[i+amin] >= low_chars) {
+                    hashi_setpos (&hashi, a[i+amin], i);
+                }
+            }
         }
+
+        int diff = m;
+        bv_bits mask = 0x1ull << (m - 1);
+        bv_bits VP   = masks[m - 1];
+        bv_bits VN   = 0;
+
+        #ifdef _LEVBV_DEBUG
+        printf("mask: %s \n", pBinFill(mask, so, '0'));
+        printf("VP:   %s \n", pBinFill(VP, so, '0'));
+        #endif
+
+        //int n = bmax-bmin +1;
+
+        bv_bits y;
+        for (i=bmin; i <= bmax; i++) {
+            if (b[i] < _LEVBV_LOW_CHARS) {
+                y = posbits[b[i]];
+
+                #ifdef _LEVBV_DEBUG
+                co[0] = b[i];
+                printf("i: %u posbit for char: %s %s\n", i, co, pBinFill(y,so,'0'));
+                #endif
+            }
+            else {
+                y = hashi_getpos (&hashi, b[i]);
+            }
+            bv_bits X  = y | VN;
+            bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+            bv_bits HN = VP & D0;
+            bv_bits HP = VN | ~(VP|D0);
+            X  = (HP << 1) | 0x1ull;
+            VN = X & D0;
+            VP = (HN << 1) | ~(X | D0);
+            if (HP & mask) { diff++; }
+            if (HN & mask) { diff--; }
+
+            #ifdef _LEVBV_DEBUG
+            printf("HP: %s \n", pBinFill(HP,so,'0'));
+            printf("HN: %s \n", pBinFill(HN,so,'0'));
+            printf("i: %u diff: %u \n", i, diff);
+            #endif
+        }
+        return diff;
     }
+    else {
+        int diff = m;
 
-    // for codepoints in the high range we use sequential search
-    int uni_chars = m - ascii_chars;
+        int kmax = (m) / width;
+        if ( m % width ) { kmax++; }
 
-    Hashi hashi;
-    uint32_t ikeys[uni_chars+1];
-    //bv_bits bits[uni_chars+1][kmax];
-    /* int *arr = malloc(sizeof *arr * rows * cols);
-        arr[i * rows + j] = ...; // logically equivalent to arr[i][j]
-    */
-    // char *name = (char *) alloca (strlen (str1) + strlen (str2) + 1);
-    // void ** vec = (void **) alloca(vec_sz * sizeof(void *));
-    //bv_bits *bits = (bv_bits *) alloca ( (uni_chars+1) * kmax *  sizeof(bv_bits) );
-    bv_bits bits[ (uni_chars+1) * kmax ];
+        #ifdef _LEVBV_DEBUG
+        printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
+        printf("m: %u  kmax: %u \n", m, kmax);
+        char so[kDisplayWidth+1]; // working buffer for pBin
+        unsigned char co[2] = { 0 };
+        #endif
 
-    hashi.ikeys = ikeys;
-    hashi.bits  = bits;
+        // for codepoints in the low range we use fast table lookup
+        int low_chars = _LEVBV_LOW_CHARS;
+        bv_bits *posbits
+            = (bv_bits *) alloca ( _LEVBV_LOW_CHARS * kmax *  sizeof(bv_bits) );
 
-    if (uni_chars > 0) {
+        int i;
+        int k;
+
+        for (i=0; i < low_chars; i++) {
+            for (k=0; k < kmax; k++) {
+                posbits[i * kmax + k] = 0;
+            }
+        }
+
+        int ascii_chars = 0;
+        for (i=0; i < m; i++) {
+            if ((unsigned int)a[i+amin] < low_chars) {
+                posbits[ (unsigned int)a[i+amin] * kmax + (unsigned int)(i/width) ]
+                    |= 0x1ull << (i % width);
+                ascii_chars++;
+            }
+        }
+
+        // for codepoints in the high range we use sequential search
+        int uni_chars = m - ascii_chars;
+
+        Hashi hashi;
+        uint32_t ikeys[uni_chars+1];
+        bv_bits bits[ (uni_chars+1) * kmax ];
+
+        hashi.ikeys = ikeys;
+        hashi.bits  = bits;
+
+
         for (i=0; i <= uni_chars; i++) {
             hashi.ikeys[i]         = 0;
             for (k=0; k < kmax; k++ ) {
-                //hashi.bits[i][k] = 0;
                 hashi.bits[i * kmax + k] = 0;
             }
         }
 
-        for (i=0; i < m; i++) {
-            for (k=0; k < kmax; k++ ) {
+        if (uni_chars > 0) {
+            for (i=0; i < m; i++) {
                 if (a[i+amin] >= low_chars) {
                     hashi_setpos_k (&hashi, a[i+amin], i, k, kmax);
                 }
             }
         }
-    }
 
-    bv_bits mask[kmax];
-    for (k=0; k < kmax; k++) { mask[k] = 0; }
-    mask[kmax-1] = 0x1ull << ((m-1) % width);
+        bv_bits mask[kmax];
+        for (k=0; k < kmax; k++) { mask[k] = 0; }
+        mask[kmax-1] = 0x1ull << ((m-1) % width);
 
-    // bv_bits VP   = masks[m - 1];
-    bv_bits VPs[kmax];
-    for (k=0; k < kmax; k++) { VPs[k] = 0xffffffffffffffffull; }
-    VPs[kmax-1] =  masks[ (unsigned int)((m-1) % width) ];
-    //for (i=0; i < m; i++) {
-        //VPs[(unsigned int)(i/width)] |= 0x1ull << (i % width);
-    //}
+        // bv_bits VP   = masks[m - 1];
+        bv_bits VPs[kmax];
+        for (k=0; k < kmax; k++) { VPs[k] = 0xffffffffffffffffull; }
+        VPs[kmax-1] =  masks[ (unsigned int)((m-1) % width) ];
 
+        bv_bits VNs[kmax];
+        for (k=0; k < kmax; k++) { VNs[k] = 0; }
 
-    bv_bits VNs[kmax];
-    for (k=0; k < kmax; k++) { VNs[k] = 0; }
-
-    #ifdef _LEVBV_DEBUG
-    for (k=0; k < kmax; k++) {
-    printf("k: %u ((m-1) modulo width): %u \n", k, (unsigned int)((m-1) % width));
-    printf("mask: %s \n", pBinFill(mask[k], so, '0'));
-    printf("VPs:  %s \n", pBinFill(VPs[k], so, '0'));
-    }
-    #endif
-
-    bv_bits y, X, D0, HN, HP;
-
-    bv_bits HNcarry;
-    bv_bits HPcarry;
-
-    for (i=bmin; i <= bmax; i++) {
         #ifdef _LEVBV_DEBUG
-        co[0] = b[i];
-        printf("i: %u char: %s \n", i, co );
+        for (k=0; k < kmax; k++) {
+            printf("k: %u ((m-1) modulo width): %u \n", k, (unsigned int)((m-1) % width));
+            printf("mask: %s \n", pBinFill(mask[k], so, '0'));
+            printf("VPs:  %s \n", pBinFill(VPs[k], so, '0'));
+        }
         #endif
 
-        HNcarry = 0;
-        HPcarry = 1;
-        for (int k=0; k < kmax; k++ ) {
-            if (b[i] < _LEVBV_LOW_CHARS) {
-                // y = posbits[(unsigned int)b[i]][k];
-                y = posbits[(unsigned int)b[i] * kmax + k];
+        bv_bits y, X, D0, HN, HP;
 
+        bv_bits HNcarry;
+        bv_bits HPcarry;
 
-            }
-            else {
-                y = hashi_getpos_k (&hashi, b[i], k, kmax);
-            }
-
+        for (i=bmin; i <= bmax; i++) {
             #ifdef _LEVBV_DEBUG
             co[0] = b[i];
-            printf("pos: %s \n", pBinFill(y,so,'0'));
+            printf("i: %u char: %s \n", i, co );
             #endif
 
-            X  = y | HNcarry | VNs[k];
-            D0 = ((VPs[k] + (X & VPs[k])) ^ VPs[k]) | X;
-            HN = VPs[k] & D0;
-            HP = VNs[k] | ~(VPs[k] | D0);
-            X  = (HP << 1) | HPcarry;
-            HPcarry = HP >> (width-1) & 0x1ull;
-            VNs[k]  = (X & D0);
-            VPs[k]  = (HN << 1) | (HNcarry) | ~(X | D0);
-            HNcarry = HN >> (width-1) & 0x1ull;
+            HNcarry = 0;
+            HPcarry = 1;
+            for (int k=0; k < kmax; k++ ) {
+                if (b[i] < _LEVBV_LOW_CHARS) {
+                    y = posbits[(unsigned int)b[i] * kmax + k];
+                }
+                else {
+                    y = hashi_getpos_k (&hashi, b[i], k, kmax);
+                }
 
-            if      (HP & mask[k]) { diff++; }
-            else if (HN & mask[k]) { diff--; }
+                #ifdef _LEVBV_DEBUG
+                co[0] = b[i];
+                printf("pos: %s \n", pBinFill(y,so,'0'));
+                #endif
 
-            #ifdef _LEVBV_DEBUG
-            printf("HP:  %s \n", pBinFill(HP, so, '0'));
-            printf("HN:  %s \n", pBinFill(HN, so, '0'));
-            printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n", i, k, diff, HPcarry, HNcarry);
-            #endif
+                X  = y | HNcarry | VNs[k];
+                D0 = ((VPs[k] + (X & VPs[k])) ^ VPs[k]) | X;
+                HN = VPs[k] & D0;
+                HP = VNs[k] | ~(VPs[k] | D0);
+                X  = (HP << 1) | HPcarry;
+                HPcarry = HP >> (width-1) & 0x1ull;
+                VNs[k]  = (X & D0);
+                VPs[k]  = (HN << 1) | (HNcarry) | ~(X | D0);
+                HNcarry = HN >> (width-1) & 0x1ull;
+
+                if      (HP & mask[k]) { diff++; }
+                else if (HN & mask[k]) { diff--; }
+
+                #ifdef _LEVBV_DEBUG
+                printf("HP:  %s \n", pBinFill(HP, so, '0'));
+                printf("HN:  %s \n", pBinFill(HN, so, '0'));
+                printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n",
+                    i, k, diff, HPcarry, HNcarry);
+                #endif
+            }
         }
+        return diff;
     }
-    return diff;
-  }
-
 }
 
 #define MAX_LEVENSHTEIN_STRLEN    16384
@@ -864,7 +716,6 @@ dist_simple( const uint32_t *a, int alen, const uint32_t *b, int blen ) {
     int bmin = 0;
     int bmax = blen-1;
 
-if (1) {
     while ( amin <= amax && bmin <= bmax && a[amin] == b[bmin] ) {
         amin++;
         bmin++;
@@ -873,7 +724,7 @@ if (1) {
         amax--;
         bmax--;
     }
-}
+
     // if one of the sequences is a complete subset of the other,
     // return difference of lengths.
     if ((amax < amin) || (bmax < bmin)) { return abs(alen - blen); }
@@ -960,7 +811,6 @@ int dist_array (const Array *a, const Array *b ) {
 
     if ((amax < amin) || (bmax < bmin)) { return abs(a->elements - b->elements); }
 
-if (1) {
     // int array_key_compare(Array *a, Array *b, int i, int j)
     while (amin <= amax && bmin <= bmax && array_key_compare(a, b, amin, bmin) ) {
         amin++;
@@ -970,7 +820,6 @@ if (1) {
         amax--;
         bmax--;
     }
-}
 
     // if one of the sequences is a complete subset of the other,
     // return difference of lengths.
@@ -978,164 +827,51 @@ if (1) {
 
     int m = amax-amin + 1;
 
-  if ( 1 && ((amax - amin) < width) ) {
-
-    #ifdef _LEVBV_DEBUG
-    printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
-    printf("m: %u   \n", m);
-    char so[kDisplayWidth+1]; // working buffer for pBin
-    unsigned char co[2] = { 0 };
-    #endif
-
-    int i;
-
-    Hash hash;
-    void     *keys[m+1];
-    uint32_t lens[m+1];
-    bv_bits  bits[m+1];
-    hash.keys = keys;
-    hash.lens = lens;
-    hash.bits = bits;
-
-    for (i = 0; i <= m; i++) {
-      hash.keys[i] = 0;
-      hash.lens[i] = 0;
-      hash.bits[i] = 0;
-    }
-
-    // uint32_t q, keylen;
-    uint32_t keylen;
-    for (i=0; i < m; i++){
-        keylen = a->lens[i+amin];
-        hash_setpos (&hash, a->keys[i+amin], i, keylen);
-    }
-
-
-
-    int diff = m;
-    bv_bits mask = 0x1ull << (m - 1);
-    bv_bits VP   = masks[m - 1];
-    bv_bits VN   = 0;
-
-    #ifdef _LEVBV_DEBUG
-    printf("mask: %s \n", pBinFill(mask, so, '0'));
-    printf("VP:   %s \n", pBinFill(VP, so, '0'));
-    #endif
-
-    bv_bits y;
-    for (i=bmin; i <= bmax; i++) {
-        y = hash_getpos (&hash, b->keys[i], b->lens[i]);
+    if ((amax - amin) < width) {
 
         #ifdef _LEVBV_DEBUG
-        //co[0] = b[i];
-        co[0] = b->keys[i];
-        printf("pos: %s \n", pBinFill(y,so,'0'));
+        printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
+        printf("m: %u   \n", m);
+        char so[kDisplayWidth+1]; // working buffer for pBin
+        unsigned char co[2] = { 0 };
         #endif
 
-        bv_bits X  = y | VN;
-        bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
-        bv_bits HN = VP & D0;
-        bv_bits HP = VN | ~(VP|D0);
-        X  = (HP << 1) | 0x1ull;
-        VN = X & D0;
-        VP = (HN << 1) | ~(X | D0);
-        if (HP & mask) { diff++; }
-        if (HN & mask) { diff--; }
+        int i;
 
-        #ifdef _LEVBV_DEBUG
-        printf("HP: %s \n", pBinFill(HP,so,'0'));
-        printf("HN: %s \n", pBinFill(HN,so,'0'));
-        printf("i: %u diff: %u \n", i, diff);
-        #endif
-    }
-    return diff;
-  }
-  else {
+        Hash hash;
+        void     *keys[m+1];
+        uint32_t lens[m+1];
+        bv_bits  bits[m+1];
+        hash.keys = keys;
+        hash.lens = lens;
+        hash.bits = bits;
 
-    int diff = m;
-
-    int kmax = (m) / width;
-    if ( m % width ) { kmax++; }
-
-    #ifdef _LEVBV_DEBUG
-    printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
-    printf("m: %u  kmax: %u \n", m, kmax);
-    char so[kDisplayWidth+1]; // working buffer for pBin
-    unsigned char co[2] = { 0 };
-    #endif
-
-    int k;
-
-    Hash hash;
-    void     *keys[m+1];
-    uint32_t lens[m+1];
-    //bv_bits  bits[m+1];
-    bv_bits bits[ (m+1) * kmax ];
-    hash.keys = keys;
-    hash.lens = lens;
-    hash.bits = bits;
-
-    int32_t i;
-    for (i=0; i <= m; i++) {
-        hash.keys[i]         = 0;
-        for (k=0; k < kmax; k++ ) {
-            hash.bits[i * kmax + k] = 0;
+        for (i = 0; i <= m; i++) {
+            hash.keys[i] = 0;
+            hash.lens[i] = 0;
+            hash.bits[i] = 0;
         }
-    }
 
-    uint32_t keylen;
-    for (i=0; i < m; i++) {
-        //keylen = strlen(a[i+amin]);
-        keylen = a->lens[i+amin];
-        //for (k=0; k < kmax; k++ ) {
-            hash_setpos_k (&hash, a->keys[i+amin], i, keylen, k, kmax);
-        //}
-    }
+        // uint32_t q, keylen;
+        uint32_t keylen;
+        for (i=0; i < m; i++){
+            keylen = a->lens[i+amin];
+            hash_setpos (&hash, a->keys[i+amin], i, keylen);
+        }
 
-    #ifdef _LEVBV_DEBUG
-    hash_debug_utf8 (&hash, kmax);
-    #endif
+        int diff = m;
+        bv_bits mask = 0x1ull << (m - 1);
+        bv_bits VP   = masks[m - 1];
+        bv_bits VN   = 0;
 
-    bv_bits mask[kmax];
-    for (k=0; k < kmax; k++) { mask[k] = 0; }
-    mask[kmax-1] = 0x1ull << ((m-1) % width);
-
-    // bv_bits VP   = masks[m - 1];
-    bv_bits VPs[kmax];
-    for (k=0; k < kmax; k++) { VPs[k] = 0xffffffffffffffffull; }
-    VPs[kmax-1] =  masks[ (unsigned int)((m-1) % width) ];
-    //for (i=0; i < m; i++) {
-        //VPs[(unsigned int)(i/width)] |= 0x1ull << (i % width);
-    //}
-
-
-    bv_bits VNs[kmax];
-    for (k=0; k < kmax; k++) { VNs[k] = 0; }
-
-    #ifdef _LEVBV_DEBUG
-    for (k=0; k < kmax; k++) {
-    printf("k: %u ((m-1) modulo width): %u \n", k, (unsigned int)((m-1) % width));
-    printf("mask: %s \n", pBinFill(mask[k], so, '0'));
-    printf("VPs:  %s \n", pBinFill(VPs[k], so, '0'));
-    }
-    #endif
-
-    bv_bits y, X, D0, HN, HP;
-
-    bv_bits HNcarry;
-    bv_bits HPcarry;
-
-    for (i=bmin; i <= bmax; i++) {
         #ifdef _LEVBV_DEBUG
-        //co[0] = b[i];
-        co[0] = b->keys[i];
-        printf("i: %u char: %s \n", i, co );
+        printf("mask: %s \n", pBinFill(mask, so, '0'));
+        printf("VP:   %s \n", pBinFill(VP, so, '0'));
         #endif
 
-        HNcarry = 0;
-        HPcarry = 1;
-        for (int k=0; k < kmax; k++ ) {
-            y = hash_getpos_k (&hash, b->keys[i], b->lens[i], k, kmax);
+        bv_bits y;
+        for (i=bmin; i <= bmax; i++) {
+            y = hash_getpos (&hash, b->keys[i], b->lens[i]);
 
             #ifdef _LEVBV_DEBUG
             //co[0] = b[i];
@@ -1143,29 +879,131 @@ if (1) {
             printf("pos: %s \n", pBinFill(y,so,'0'));
             #endif
 
-            X  = y | HNcarry | VNs[k];
-            D0 = ((VPs[k] + (X & VPs[k])) ^ VPs[k]) | X;
-            HN = VPs[k] & D0;
-            HP = VNs[k] | ~(VPs[k] | D0);
-            X  = (HP << 1) | HPcarry;
-            HPcarry = HP >> (width-1) & 0x1ull;
-            VNs[k]  = (X & D0);
-            VPs[k]  = (HN << 1) | (HNcarry) | ~(X | D0);
-            HNcarry = HN >> (width-1) & 0x1ull;
-
-            if      (HP & mask[k]) { diff++; }
-            else if (HN & mask[k]) { diff--; }
+            bv_bits X  = y | VN;
+            bv_bits D0 = ((VP + (X & VP)) ^ VP) | X;
+            bv_bits HN = VP & D0;
+            bv_bits HP = VN | ~(VP|D0);
+            X  = (HP << 1) | 0x1ull;
+            VN = X & D0;
+            VP = (HN << 1) | ~(X | D0);
+            if (HP & mask) { diff++; }
+            if (HN & mask) { diff--; }
 
             #ifdef _LEVBV_DEBUG
-            printf("HP:  %s \n", pBinFill(HP, so, '0'));
-            printf("HN:  %s \n", pBinFill(HN, so, '0'));
-            printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n", i, k, diff, HPcarry, HNcarry);
+            printf("HP: %s \n", pBinFill(HP,so,'0'));
+            printf("HN: %s \n", pBinFill(HN,so,'0'));
+            printf("i: %u diff: %u \n", i, diff);
             #endif
         }
+        return diff;
     }
-    return diff;
-  }
+    else {
 
+        int diff = m;
+
+        int kmax = (m) / width;
+        if ( m % width ) { kmax++; }
+
+        #ifdef _LEVBV_DEBUG
+        printf("amax: %u amin: %u bmax: %u bmin: %u \n", amax, amin, bmax, bmin );
+        printf("m: %u  kmax: %u \n", m, kmax);
+        char so[kDisplayWidth+1]; // working buffer for pBin
+        unsigned char co[2] = { 0 };
+        #endif
+
+        int k;
+
+        Hash hash;
+        void     *keys[m+1];
+        uint32_t lens[m+1];
+        bv_bits bits[ (m+1) * kmax ];
+        hash.keys = keys;
+        hash.lens = lens;
+        hash.bits = bits;
+
+        int32_t i;
+        for (i=0; i <= m; i++) {
+            hash.keys[i] = 0;
+            for (k=0; k < kmax; k++ ) {
+                hash.bits[i * kmax + k] = 0;
+            }
+        }
+
+        uint32_t keylen;
+        for (i=0; i < m; i++) {
+            keylen = a->lens[i+amin];
+            hash_setpos_k (&hash, a->keys[i+amin], i, keylen, k, kmax);
+        }
+
+        #ifdef _LEVBV_DEBUG
+        hash_debug_utf8 (&hash, kmax);
+        #endif
+
+        bv_bits mask[kmax];
+        for (k=0; k < kmax; k++) { mask[k] = 0; }
+        mask[kmax-1] = 0x1ull << ((m-1) % width);
+
+        // bv_bits VP   = masks[m - 1];
+        bv_bits VPs[kmax];
+        for (k=0; k < kmax; k++) { VPs[k] = 0xffffffffffffffffull; }
+        VPs[kmax-1] =  masks[ (unsigned int)((m-1) % width) ];
+
+        bv_bits VNs[kmax];
+        for (k=0; k < kmax; k++) { VNs[k] = 0; }
+
+        #ifdef _LEVBV_DEBUG
+        for (k=0; k < kmax; k++) {
+            printf("k: %u ((m-1) modulo width): %u \n", k, (unsigned int)((m-1) % width));
+            printf("mask: %s \n", pBinFill(mask[k], so, '0'));
+            printf("VPs:  %s \n", pBinFill(VPs[k], so, '0'));
+        }
+        #endif
+
+        bv_bits y, X, D0, HN, HP;
+
+        bv_bits HNcarry;
+        bv_bits HPcarry;
+
+        for (i=bmin; i <= bmax; i++) {
+            #ifdef _LEVBV_DEBUG
+            //co[0] = b[i];
+            co[0] = b->keys[i];
+            printf("i: %u char: %s \n", i, co );
+            #endif
+
+            HNcarry = 0;
+            HPcarry = 1;
+            for (int k=0; k < kmax; k++ ) {
+                y = hash_getpos_k (&hash, b->keys[i], b->lens[i], k, kmax);
+
+                #ifdef _LEVBV_DEBUG
+                //co[0] = b[i];
+                co[0] = b->keys[i];
+                printf("pos: %s \n", pBinFill(y,so,'0'));
+                #endif
+
+                X  = y | HNcarry | VNs[k];
+                D0 = ((VPs[k] + (X & VPs[k])) ^ VPs[k]) | X;
+                HN = VPs[k] & D0;
+                HP = VNs[k] | ~(VPs[k] | D0);
+                X  = (HP << 1) | HPcarry;
+                HPcarry = HP >> (width-1) & 0x1ull;
+                VNs[k]  = (X & D0);
+                VPs[k]  = (HN << 1) | (HNcarry) | ~(X | D0);
+                HNcarry = HN >> (width-1) & 0x1ull;
+
+                if      (HP & mask[k]) { diff++; }
+                else if (HN & mask[k]) { diff--; }
+
+                #ifdef _LEVBV_DEBUG
+                printf("HP:  %s \n", pBinFill(HP, so, '0'));
+                printf("HN:  %s \n", pBinFill(HN, so, '0'));
+                printf("i: %u k: %u diff: %u HPcarry: %llu HNcarry: %llu \n", i, k, diff, HPcarry, HNcarry);
+                #endif
+            }
+        }
+        return diff;
+    }
 }
 
 int
@@ -1266,24 +1104,4 @@ if (1) {
 
 #ifdef __cplusplus
 }
-#endif
-
-// integer overflow http://www.fefe.de/intof.html
-
-#ifndef _LEVBV_TEST
-
-int levnoop (const UV * a, int alen, const UV * b, int blen) {
-
-    int diff = 99;
-
-    return diff;
-}
-
-int noutf (const SV * a, const SV * b) {
-
-    int diff = 99;
-
-    return diff;
-}
-
 #endif
