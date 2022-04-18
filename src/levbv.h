@@ -27,15 +27,15 @@ typedef struct {
     int elements;
 } Array;
 
-int dist_bytes (const char * a, int alen, const char * b,  int blen);
-int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen);
+int dist_bytes (const unsigned char * a, int alen, unsigned const char * b,  int blen);
+int dist_utf8_ucs (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen);
 int dist_uni (const uint32_t *a, int alen, const uint32_t *b, int blen);
 int dist_hybrid (const uint32_t *a, int alen, const uint32_t *b, int blen);
 int dist_simple (const uint32_t *a, int alen, const uint32_t *b, int blen);
-int dist_simple_utf8 (char * a, uint32_t alen, char * b, uint32_t blen);
+int dist_simple_utf8 (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen);
 
 int dist_array (const Array *a, const Array *b);
-int dist_simple_arr( const Array *a, const Array *b );
+int dist_simple_arr ( const Array *a, const Array *b );
 
 #endif
 

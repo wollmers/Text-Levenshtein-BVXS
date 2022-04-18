@@ -294,7 +294,7 @@ static const uint32_t masks[32] = {
     #define _LEVBV_LOW_CHARS 128
 #endif
 
-int dist_bytes (const char * a, int alen, const char * b,  int blen) {
+int dist_bytes (const unsigned char * a, int alen, const unsigned char * b,  int blen) {
 
     int amin = 0;
     int amax = alen-1;
@@ -362,8 +362,9 @@ int dist_bytes (const char * a, int alen, const char * b,  int blen) {
 
         // for codepoints in the low range we use fast table lookup
         //int low_chars = 256;
-        bv_bits *posbits
-            = (bv_bits *) alloca ( 128 * kmax *  sizeof(bv_bits) );
+        bv_bits *posbits = (bv_bits *) alloca ( 256 * kmax *  sizeof(bv_bits) );
+
+        //bv_bits *posbits[256 * kmax] = { 0 };
 
         int i;
         int k;
@@ -423,7 +424,7 @@ int dist_bytes (const char * a, int alen, const char * b,  int blen) {
 
 
 // utf-8 to UCS-4 wrapper for dist_uni
-int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
+int dist_utf8_ucs (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen) {
 
     uint32_t a_ucs[(alen+1)*4];
     uint32_t b_ucs[(blen+1)*4];
@@ -439,7 +440,7 @@ int dist_utf8_ucs (char * a, uint32_t alen, char * b, uint32_t blen) {
     return diff;
 }
 
-int dist_simple_utf8 (char * a, uint32_t alen, char * b, uint32_t blen) {
+int dist_simple_utf8 (unsigned char * a, uint32_t alen, unsigned char * b, uint32_t blen) {
 
     uint32_t a_ucs[(alen+1)*4];
     uint32_t b_ucs[(blen+1)*4];

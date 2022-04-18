@@ -7,6 +7,7 @@
 
 #define _LEVBV_FOR_PERL
 
+/*
 int
 dist_any (SV *s1, SV *s2)
 {
@@ -33,6 +34,28 @@ dist_any (SV *s1, SV *s2)
     }
     return dist;
 }
+*/
+
+int
+dist_any (SV *s1, SV *s2)
+{
+    int dist;
+
+	STRLEN m;
+	STRLEN n;
+	// SvPVbyte
+    unsigned char *a = (unsigned char*)SvPV (s1, m);
+    unsigned char *b = (unsigned char*)SvPV (s2, n);
+
+    if (SvUTF8 (s1) || SvUTF8 (s2) ) {
+        dist = dist_utf8_ucs (a, m, b, n);
+    }
+    else {
+
+        dist = dist_bytes (a, m, b, n);
+    }
+    return dist;
+}
 
 MODULE = Text::Levenshtein::BVXS  PACKAGE = Text::Levenshtein::BVXS
 
@@ -47,8 +70,8 @@ simple(s1, s2)
     STRLEN m;
     STRLEN n;
     // SvPVbyte
-    char *a = SvPV (s1, m);
-    char *b = SvPV (s2, n);
+    unsigned char *a = (unsigned char*)SvPV (s1, m);
+    unsigned char *b = (unsigned char*)SvPV (s2, n);
 
     RETVAL = dist_simple_utf8 (a, m, b, n);
 }

@@ -33,6 +33,19 @@ static const u_int32_t offsetsFromUTF8[6] = {
     0x03C82080UL, 0xFA082080UL, 0x82082080UL
 };
 
+/*
+static const char allBytesForUTF8[256] = {
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, 4,4,4,4,4,4,4,4,5,5,5,5,6,6,6,6
+};
+*/
+
 static const char trailingBytesForUTF8[256] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -59,24 +72,29 @@ int u8_seqlen(char *s)
    dest will always be L'\0'-terminated, even if there isn't enough room
    for all the characters.
    if sz = srcsz+1 (i.e. 4*srcsz+4 bytes), there will always be enough space.
+
+   Note: modified to not using \0 termination (srcsz -1)
 */
-int u8_toucs(u_int32_t *dest, int sz, char *src, int srcsz)
+//int u8_toucs(u_int32_t *dest, int sz, unsigned char *src, int srcsz)
+int u8_toucs_old(u_int32_t *dest, int sz, unsigned char *src, unsigned int srcsz)
 {
     u_int32_t ch;
-    char *src_end = src + srcsz;
+    unsigned char *src_end = src + srcsz;
     int nb;
     int i=0;
 
     while (i < sz-1) {
         nb = trailingBytesForUTF8[(unsigned char)*src];
+        /*
         if (srcsz == -1) {
             if (*src == 0)
                 goto done_toucs;
         }
         else {
+        */
             if (src + nb >= src_end)
                 goto done_toucs;
-        }
+        //}
         ch = 0;
         switch (nb) {
             /* these fall through deliberately */
@@ -93,6 +111,61 @@ int u8_toucs(u_int32_t *dest, int sz, char *src, int srcsz)
  done_toucs:
     dest[i] = 0;
     return i;
+}
+
+int u8_toucs(u_int32_t *dest, int sz, unsigned char *src, unsigned int srcsz)
+{
+    u_int32_t ch;
+    unsigned char *src_end = src + srcsz;
+    int nb;
+    int i=0;
+/*
+length byte[0]  byte[1]  byte[2]  byte[3]
+1      0xxxxxxx
+2      110xxxxx 10xxxxxx
+3      1110xxxx 10xxxxxx 10xxxxxx
+4      11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+
+
+1 0xxx xxxx  00 .. 7F    s[0] < 0x80
+2 110x xxxx  C0 .. DF    (s[0] & 0xe0) == 0xc0
+3 1110 xxxx  E0 .. EF    (s[0] & 0xf0) == 0xe0
+4 1111 0xxx  F0 .. F7    (s[0] & 0xf8) == 0xf0 && (s[0] <= 0xf4)
+5 1111 10xx  F8 .. FB
+6 1111 110x  FC .. FD
+
+    static const char lengths[] = {
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0
+    };
+*/
+    while (i < sz-1) {
+
+        if ((unsigned char)*src < 0x80) {
+            if (src >= src_end) { goto done_toucs; }
+            ch = (unsigned char)*src++;
+            dest[i++] = ch;
+        }
+        else {
+            nb = trailingBytesForUTF8[(unsigned char)*src];
+            if (src + nb >= src_end) { goto done_toucs; }
+            ch = 0;
+            switch (nb) {
+                /* these fall through deliberately */
+                case 5: ch += (unsigned char)*src++; ch <<= 6;
+                case 4: ch += (unsigned char)*src++; ch <<= 6;
+                case 3: ch += (unsigned char)*src++; ch <<= 6;
+                case 2: ch += (unsigned char)*src++; ch <<= 6;
+                case 1: ch += (unsigned char)*src++; ch <<= 6;
+                case 0: ch += (unsigned char)*src++;
+            }
+            ch -= offsetsFromUTF8[nb];
+            dest[i++] = ch;
+        }
+    }
+    done_toucs:
+        dest[i] = 0;
+        return i;
 }
 
 

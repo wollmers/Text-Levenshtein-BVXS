@@ -481,3 +481,45 @@ TL::BVXS_arr_uni   1124391/s            2907%             998%         771%     
 TL::BVXS_arr_ascii 1194347/s            3094%            1066%         825%         439%               6%                 --         -53%           -68%
 TL::Flex_uni       2536172/s            6682%            2377%        1864%        1045%             126%               112%           --           -31%
 TL::Flex_ascii     3682290/s            9746%            3496%        2751%        1563%             227%               208%          45%             --
+
+[dist_bytes]      iters: 20 M Elapsed: 0.794973 s Rate: 25.2 (M/sec) elRate 276.7 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.637388 s Rate: 12.2 (M/sec) elRate 134.4 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.896534 s Rate: 22.3 (M/sec) elRate 245.4 4
+[dist_simple]     iters: 20 M Elapsed: 2.299277 s Rate:  8.7 (M/sec) elRate  95.7 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.217549 s Rate:  4.6 (M/sec) elRate 234.4 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.755184 s Rate:  0.4 (M/sec) elRate  18.5 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 1.040587 s Rate:  1.0 (M/sec) elRate  66.3 2
+[dist_simple_l68] iters:  1 M Elapsed: 4.985688 s Rate:  0.2 (M/sec) elRate  13.8 2
+
+# with faster utf-8 decode ~ +13%
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
+                      Rate TL::Flex_l68 TL::Flex_l52 TL::BVXS_l68 TL::Flex_uni TL::Flex_ascii TL::BVXS_l52 TL::BVXS_simple TL::BVXS_uni TL::BVXS_ascii
+TL::Flex_l68      127242/s           --         -43%         -87%         -95%           -97%         -97%            -98%         -99%           -99%
+TL::Flex_l52      222695/s          75%           --         -78%         -91%           -94%         -95%            -96%         -97%           -98%
+TL::BVXS_l68      998734/s         685%         348%           --         -59%           -73%         -76%            -84%         -88%           -92%
+TL::Flex_uni     2429401/s        1809%         991%         143%           --           -34%         -42%            -60%         -71%           -81%
+TL::Flex_ascii   3670015/s        2784%        1548%         267%          51%             --         -12%            -39%         -57%           -71%
+TL::BVXS_l52     4170472/s        3178%        1773%         318%          72%            14%           --            -31%         -51%           -67%
+TL::BVXS_simple  6056132/s        4660%        2619%         506%         149%            65%          45%              --         -29%           -52%
+TL::BVXS_uni     8495407/s        6577%        3715%         751%         250%           131%         104%             40%           --           -33%
+TL::BVXS_ascii  12743110/s        9915%        5622%        1176%         425%           247%         206%            110%          50%             --
+                        Rate TL::BVXS_arr_l68 TL::BVXS_arr_l52 TL::Flex_l68 TL::Flex_l52 TL::BVXS_arr_ascii TL::BVXS_arr_uni TL::Flex_uni TL::Flex_ascii
+TL::BVXS_arr_l68     35544/s               --             -65%         -72%         -84%               -97%             -97%         -99%           -99%
+TL::BVXS_arr_l52    102399/s             188%               --         -19%         -54%               -91%             -91%         -96%           -97%
+TL::Flex_l68        126867/s             257%              24%           --         -42%               -89%             -89%         -95%           -97%
+TL::Flex_l52        220553/s             521%             115%          74%           --               -80%             -81%         -91%           -94%
+TL::BVXS_arr_ascii 1113476/s            3033%             987%         778%         405%                 --              -2%         -55%           -70%
+TL::BVXS_arr_uni   1135524/s            3095%            1009%         795%         415%                 2%               --         -54%           -69%
+TL::Flex_uni       2453219/s            6802%            2296%        1834%        1012%               120%             116%           --           -33%
+TL::Flex_ascii     3674915/s           10239%            3489%        2797%        1566%               230%             224%          50%             --
+
+[dist_bytes]      iters: 20 M Elapsed: 0.775099 s Rate: 25.8 (M/sec) elRate 283.8 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.373599 s Rate: 14.6 (M/sec) elRate 160.2 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.902721 s Rate: 22.2 (M/sec) elRate 243.7 4
+[dist_simple]     iters: 20 M Elapsed: 2.262337 s Rate:  8.8 (M/sec) elRate  97.2 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.231926 s Rate:  4.3 (M/sec) elRate 219.9 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.805825 s Rate:  0.4 (M/sec) elRate  18.2 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 1.076955 s Rate:  0.9 (M/sec) elRate  64.1 2
+[dist_simple_l68] iters:  1 M Elapsed: 5.153448 s Rate:  0.2 (M/sec) elRate  13.4 2
+Total: 14.581910 seconds

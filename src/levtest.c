@@ -62,20 +62,18 @@ int main (void) {
     // convert to ucs
     uint32_t a_ucs[(utf_len1+1)*4];
     uint32_t b_ucs[(utf_len2+1)*4];
-    int a_chars;
-    int b_chars;
 
-    a_chars = u8_toucs(a_ucs, (utf_len1+1)*4, utf_str1, utf_len1);
-    b_chars = u8_toucs(b_ucs, (utf_len2+1)*4, utf_str2, utf_len2);
+    int a_chars = u8_toucs(a_ucs, (utf_len1+1)*4, (unsigned char*)utf_str1, utf_len1);
+    int b_chars = u8_toucs(b_ucs, (utf_len2+1)*4, (unsigned char*)utf_str2, utf_len2);
 
     int distance;
     int distance2;
 
     if (1) {
-    distance = dist_bytes (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
+    distance = dist_bytes ((unsigned char*)ascii_str1, ascii_len1, (unsigned char*)ascii_str2, ascii_len2);
     printf("[dist_bytes]    distance: %u expect: 4\n", distance);
 
-    distance = dist_utf8_ucs (utf_str1, utf_len1, utf_str2, utf_len2);
+    distance = dist_utf8_ucs ((unsigned char*)utf_str1, utf_len1, (unsigned char*)utf_str2, utf_len2);
     printf("[dist_utf8_ucs] distance: %u expect: 4\n", distance);
 
     //distance = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
@@ -99,8 +97,8 @@ int main (void) {
     int a_chars_l52;
     int b_chars_l52;
 
-    a_chars_l52 = u8_toucs(a_ucs_l52, (utf_len1_l52+1)*4, utf_str1_l52, utf_len1_l52);
-    b_chars_l52 = u8_toucs(b_ucs_l52, (utf_len2_l52+1)*4, utf_str2_l52, utf_len2_l52);
+    a_chars_l52 = u8_toucs(a_ucs_l52, (utf_len1_l52+1)*4, (unsigned char*)utf_str1_l52, utf_len1_l52);
+    b_chars_l52 = u8_toucs(b_ucs_l52, (utf_len2_l52+1)*4, (unsigned char*)utf_str2_l52, utf_len2_l52);
 
     if (1) {
     printf("strlen(utf_str1_l52): %u \n", utf_len1_l52);
@@ -126,8 +124,8 @@ int main (void) {
     int a_chars_l68;
     int b_chars_l68;
 
-    a_chars_l68 = u8_toucs(a_ucs_l68, (utf_len1_l68+1)*4, utf_str1_l68, utf_len1_l68);
-    b_chars_l68 = u8_toucs(b_ucs_l68, (utf_len2_l68+1)*4, utf_str2_l68, utf_len2_l68);
+    a_chars_l68 = u8_toucs(a_ucs_l68, (utf_len1_l68+1)*4, (unsigned char*)utf_str1_l68, utf_len1_l68);
+    b_chars_l68 = u8_toucs(b_ucs_l68, (utf_len2_l68+1)*4, (unsigned char*)utf_str2_l68, utf_len2_l68);
 
     if (1) {
     printf("strlen(utf_str1_l68): %u \n", utf_len1_l68);
@@ -148,10 +146,10 @@ if ( 1 && bench_on ) {
     for (megacount = 0; megacount < megaiters; megacount++) {
       for (count = 0; count < iters; count++) {
         if (count % 2) {
-          distance = dist_bytes (ascii_str1, ascii_len1, ascii_str2, ascii_len2);
+          distance = dist_bytes ((unsigned char*)ascii_str1, ascii_len1, (unsigned char*)ascii_str2, ascii_len2);
         }
         else {
-          distance2 = dist_bytes (ascii_str2, ascii_len2, ascii_str1, ascii_len1);
+          distance2 = dist_bytes ((unsigned char*)ascii_str2, ascii_len2, (unsigned char*)ascii_str1, ascii_len1);
         }
       }
     }
@@ -174,7 +172,7 @@ if ( 1 && bench_on ) {
 
     for (megacount = 0; megacount < megaiters; megacount++) {
       for (count = 0; count < iters; count++) {
-          distance = dist_utf8_ucs (utf_str1, utf_len1, utf_str2, utf_len2);
+          distance = dist_utf8_ucs ((unsigned char*)utf_str1, utf_len1, (unsigned char*)utf_str2, utf_len2);
       }
     }
 
