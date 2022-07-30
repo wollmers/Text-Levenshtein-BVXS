@@ -16,7 +16,7 @@ require DynaLoader;
 use Autoloader;
 
 our @ISA = qw(Exporter DynaLoader);
-our @EXPORT = qw( distance simple distance_arr);
+our @EXPORT = qw( distance simple distance_arr toucs);
 bootstrap Text::Levenshtein::BVXS $VERSION;
 
 

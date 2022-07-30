@@ -491,7 +491,7 @@ TL::Flex_ascii     3682290/s            9746%            3496%        2751%     
 [dist_hybrid_l68] iters:  1 M Elapsed: 1.040587 s Rate:  1.0 (M/sec) elRate  66.3 2
 [dist_simple_l68] iters:  1 M Elapsed: 4.985688 s Rate:  0.2 (M/sec) elRate  13.8 2
 
-# with faster utf-8 decode ~ +13%
+# with faster utf-8 decode ~ +10-13%
 
 helmut@mbp:~/github/perl/Text-Levenshtein-BVXS$ perl xt/50_distance_bench.t
                       Rate TL::Flex_l68 TL::Flex_l52 TL::BVXS_l68 TL::Flex_uni TL::Flex_ascii TL::BVXS_l52 TL::BVXS_simple TL::BVXS_uni TL::BVXS_ascii
@@ -514,6 +514,7 @@ TL::BVXS_arr_uni   1135524/s            3095%            1009%         795%     
 TL::Flex_uni       2453219/s            6802%            2296%        1834%        1012%               120%             116%           --           -33%
 TL::Flex_ascii     3674915/s           10239%            3489%        2797%        1566%               230%             224%          50%             --
 
+# with faster utf-8 decode ~ +19% (for ASCII)
 [dist_bytes]      iters: 20 M Elapsed: 0.775099 s Rate: 25.8 (M/sec) elRate 283.8 4
 [dist_utf8_ucs]   iters: 20 M Elapsed: 1.373599 s Rate: 14.6 (M/sec) elRate 160.2 4
 [dist_hybrid]     iters: 20 M Elapsed: 0.902721 s Rate: 22.2 (M/sec) elRate 243.7 4
@@ -523,3 +524,36 @@ TL::Flex_ascii     3674915/s           10239%            3489%        2797%     
 [dist_hybrid_l68] iters:  1 M Elapsed: 1.076955 s Rate:  0.9 (M/sec) elRate  64.1 2
 [dist_simple_l68] iters:  1 M Elapsed: 5.153448 s Rate:  0.2 (M/sec) elRate  13.4 2
 Total: 14.581910 seconds
+
+# last
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; time ./levtest
+Sa 30 Jul 2022 04:44:41 CEST
+[dist_bytes]    distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_bytes]      iters: 20 M Elapsed: 0.768917 s Rate: 26.0 (M/sec) elRate 286.1 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.360973 s Rate: 14.7 (M/sec) elRate 161.6 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.879115 s Rate: 22.8 (M/sec) elRate 250.3 4
+[dist_simple]     iters: 20 M Elapsed: 2.276194 s Rate:  8.8 (M/sec) elRate  96.7 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.217530 s Rate:  4.6 (M/sec) elRate 234.5 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.818866 s Rate:  0.4 (M/sec) elRate  18.1 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 1.043600 s Rate:  1.0 (M/sec) elRate  66.1 2
+[dist_simple_l68] iters:  1 M Elapsed: 5.162747 s Rate:  0.2 (M/sec) elRate  13.4 2
+Total: 14.527942 seconds
+
+real	0m14.807s
+user	0m14.524s
+sys	0m0.007s
+

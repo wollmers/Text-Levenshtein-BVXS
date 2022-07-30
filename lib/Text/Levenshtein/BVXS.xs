@@ -43,7 +43,10 @@ dist_any (SV *s1, SV *s2)
 
 	STRLEN m;
 	STRLEN n;
-	// SvPVbyte
+	/* NOTE:
+		SvPVbyte would downgrade (undocumented and destructive)
+		SvPVutf8 would upgrade (also destructive)
+    */
     unsigned char *a = (unsigned char*)SvPV (s1, m);
     unsigned char *b = (unsigned char*)SvPV (s2, n);
 
@@ -51,7 +54,6 @@ dist_any (SV *s1, SV *s2)
         dist = dist_utf8_ucs (a, m, b, n);
     }
     else {
-
         dist = dist_bytes (a, m, b, n);
     }
     return dist;
@@ -144,3 +146,17 @@ distance_arr(s1, s2)
     OUTPUT:
         RETVAL
 
+int
+toucs(s1)
+    SV *    s1
+    CODE:
+{
+    STRLEN m;
+    // SvPVbyte
+    unsigned char *a = (unsigned char*)SvPV (s1, m);
+	uint32_t a_ucs[(m+1)*4];
+
+    RETVAL = u8_toucs(a_ucs, (m+1)*4, a, m);
+}
+    OUTPUT:
+        RETVAL

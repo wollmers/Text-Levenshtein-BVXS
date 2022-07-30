@@ -350,6 +350,7 @@ int dist_bytes (const unsigned char * a, int alen, const unsigned char * b,  int
             VP = (HN << 1) | ~(X | D0);
             if (HP & mask) { diff++; }
             if (HN & mask) { diff--; }
+            // else if (HN & mask) { diff--; }
         }
         return diff;
     }
@@ -562,7 +563,8 @@ int dist_hybrid (const uint32_t *a, int alen, const uint32_t *b, int blen) {
             VN = X & D0;
             VP = (HN << 1) | ~(X | D0);
             if (HP & mask) { diff++; }
-            if (HN & mask) { diff--; }
+            // if (HN & mask) { diff--; }
+            else if (HN & mask) { diff--; }
 
             #ifdef _LEVBV_DEBUG
             printf("HP: %s \n", pBinFill(HP,so,'0'));
@@ -889,6 +891,7 @@ int dist_array (const Array *a, const Array *b ) {
             VP = (HN << 1) | ~(X | D0);
             if (HP & mask) { diff++; }
             if (HN & mask) { diff--; }
+            // else if (HN & mask) { diff--; }
 
             #ifdef _LEVBV_DEBUG
             printf("HP: %s \n", pBinFill(HP,so,'0'));
