@@ -38,8 +38,11 @@ int main (void) {
     // Failed test '[aab c c] m: 5, [aab b c] n: 5 -> 1'
 
     // m=10, n=11, llcs=7, sim=0.667
-    char ascii_str1[] = "Choerephon";
-    char ascii_str2[] = "Chrerrplzon";
+    //char ascii_str1[] = "Choerephon";
+    //char ascii_str2[] = "Chrerrplzon";
+    char ascii_str1[] = "ABCDEFGH";
+    char ascii_str2[] = "abcdefgh";
+
     uint32_t ascii_len1 = strlen(ascii_str1);
     uint32_t ascii_len2 = strlen(ascii_str2);
 
@@ -47,8 +50,10 @@ int main (void) {
     //char utf_str1[] = "Choerephon";
     //char utf_str2[] = "ſhoereſhoſ";
 
-    char utf_str1[] = "Choerephon";
-    char utf_str2[] = "Chrerrplzon";
+    //char utf_str1[] = "Choerephon";
+    //char utf_str2[] = "Chrerrplzon";
+    char utf_str1[] = "ABCDEFGH";
+    char utf_str2[] = "abcdefgh";
 
     //char utf_str1[] = "aabbc";
     //char utf_str2[] = "aabcc";
@@ -71,10 +76,10 @@ int main (void) {
 
     if (1) {
     distance = dist_bytes ((unsigned char*)ascii_str1, ascii_len1, (unsigned char*)ascii_str2, ascii_len2);
-    printf("[dist_bytes]    distance: %u expect: 4\n", distance);
+    printf("[dist_bytes_l8]    distance: %u expect: 8\n", distance);
 
     distance = dist_utf8_ucs ((unsigned char*)utf_str1, utf_len1, (unsigned char*)utf_str2, utf_len2);
-    printf("[dist_utf8_ucs] distance: %u expect: 4\n", distance);
+    printf("[dist_utf8_ucs_l8] distance: %u expect: 8\n", distance);
 
     //distance = dist_uni(a_ucs, a_chars, b_ucs, b_chars);
     //printf("[dist_uni]      distance: %u expect: 4\n", distance);
@@ -82,7 +87,7 @@ int main (void) {
     //printf("[dist_hybrid]   str1: 0123456789 str2: 01234567890 \n");
     //printf("[dist_hybrid]   str1: %s str2: %s \n", utf_str1, utf_str2);
     distance = dist_hybrid(a_ucs, a_chars, b_ucs, b_chars);
-    printf("[dist_hybrid]   distance: %u expect: 4\n", distance);
+    printf("[dist_hybrid_l8]   distance: %u expect: 8\n", distance);
     }
 
 
@@ -160,7 +165,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * ascii_len2;
 
-    printf("[dist_bytes]      iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
+    printf("[dist_bytes_l8]    iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
         megaiters, elapsed, rate, el_rate, ((distance+distance2)/2));
 }
 
@@ -182,7 +187,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * utf_len2;
 
-    printf("[dist_utf8_ucs]   iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
+    printf("[dist_utf8_ucs_l8] iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 
@@ -204,7 +209,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * b_chars;
 
-    printf("[dist_hybrid]     iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
+    printf("[dist_hybrid_l8]   iters: %u M Elapsed: %f s Rate: %.1f (M/sec) elRate %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 
@@ -226,7 +231,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * b_chars;
 
-    printf("[dist_simple]     iters: %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+    printf("[dist_simple_l8]   iters: %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 
@@ -248,7 +253,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * b_chars_l52;
 
-    printf("[dist_hybrid_l52] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate %.1f %u\n",
+    printf("[dist_hybrid_l52]  iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 
@@ -270,7 +275,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * b_chars_l52;
 
-    printf("[dist_simple_l52] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+    printf("[dist_simple_l52]  iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 
@@ -292,7 +297,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * b_chars_l68;
 
-    printf("[dist_hybrid_l68] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+    printf("[dist_hybrid_l68]  iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 
@@ -314,7 +319,7 @@ if ( 1 && bench_on ) {
     rate    = (double)megaiters / (double)elapsed;
     el_rate = rate * b_chars_l68;
 
-    printf("[dist_simple_l68] iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
+    printf("[dist_simple_l68]  iters:  %u M Elapsed: %f s Rate:  %.1f (M/sec) elRate  %.1f %u\n",
         megaiters, elapsed, rate, el_rate, distance);
 }
 

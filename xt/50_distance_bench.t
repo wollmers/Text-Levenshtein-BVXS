@@ -21,7 +21,7 @@ use Data::Dumper;
 #use Text::Levenshtein::BV;
 use Text::Levenshtein::BVXS;
 #use Text::Levenshtein::XS qw(distance);
-use Text::Levenshtein::XS;
+#use Text::Levenshtein::XS;
 use Text::Levenshtein;
 use Text::Levenshtein::Flexible;
 
@@ -557,3 +557,218 @@ real	0m14.807s
 user	0m14.524s
 sys	0m0.007s
 
+# with -march=native - not worth the complication
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; make clean; make levtest; time ./levtest
+Sa 30 Jul 2022 05:12:30 CEST
+rm -rf *.o levtest levtestcpp levtestarr
+cc -std=c99 -march=native -pedantic -Wall -O3   -c -o levtest.o levtest.c
+cc -std=c99 -march=native -pedantic -Wall -O3 -o levtest levtest.o
+[dist_bytes]    distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_bytes]      iters: 20 M Elapsed: 0.740960 s Rate: 27.0 (M/sec) elRate 296.9 4 +4%
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.282500 s Rate: 15.6 (M/sec) elRate 171.5 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.857498 s Rate: 23.3 (M/sec) elRate 256.6 4
+[dist_simple]     iters: 20 M Elapsed: 2.274281 s Rate:  8.8 (M/sec) elRate  96.7 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.210431 s Rate:  4.8 (M/sec) elRate 242.4 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.756141 s Rate:  0.4 (M/sec) elRate  18.5 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 1.030322 s Rate:  1.0 (M/sec) elRate  67.0 2
+[dist_simple_l68] iters:  1 M Elapsed: 5.062443 s Rate:  0.2 (M/sec) elRate  13.6 2
+Total: 14.214576 seconds
+
+real	0m14.503s
+user	0m14.210s
+sys	0m0.007s
+
+# with last k outside loop
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; make clean; make levtest; time ./levtest
+Sa 30 Jul 2022 08:41:06 CEST
+rm -rf *.o levtest levtestcpp levtestarr
+cc -std=c99 -pedantic -Wall -O3   -c -o levtest.o levtest.c
+cc -std=c99 -pedantic -Wall -O3 -o levtest levtest.o
+[dist_bytes]    distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 69 expect: 2
+
+[dist_bytes]      iters: 20 M Elapsed: 0.767524 s Rate: 26.1 (M/sec) elRate 286.6 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.294158 s Rate: 15.5 (M/sec) elRate 170.0 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.889343 s Rate: 22.5 (M/sec) elRate 247.4 4
+[dist_simple]     iters: 20 M Elapsed: 2.246224 s Rate:  8.9 (M/sec) elRate  97.9 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.214637 s Rate:  4.7 (M/sec) elRate 237.6 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.813337 s Rate:  0.4 (M/sec) elRate  18.1 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 0.906228 s Rate:  1.1 (M/sec) elRate  76.1 69
+[dist_simple_l68] iters:  1 M Elapsed: 5.188391 s Rate:  0.2 (M/sec) elRate  13.3 2
+Total: 14.319842 seconds
+
+real	0m14.571s
+user	0m14.315s
+sys	0m0.008s
+
+# with LUT[256]
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; make clean; make levtest; time ./levtest
+Sa 30 Jul 2022 10:32:31 CEST
+rm -rf *.o levtest levtestcpp levtestarr
+cc -std=c99 -pedantic -Wall -O3   -c -o levtest.o levtest.c
+cc -std=c99 -pedantic -Wall -O3 -o levtest levtest.o
+[dist_bytes]    distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_bytes]      iters: 20 M Elapsed: 0.913634 s Rate: 21.9 (M/sec) elRate 240.8 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.375769 s Rate: 14.5 (M/sec) elRate 159.9 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.870847 s Rate: 23.0 (M/sec) elRate 252.6 4
+[dist_simple]     iters: 20 M Elapsed: 2.230758 s Rate:  9.0 (M/sec) elRate  98.6 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.217868 s Rate:  4.6 (M/sec) elRate 234.1 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.854556 s Rate:  0.4 (M/sec) elRate  17.9 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 0.975225 s Rate:  1.0 (M/sec) elRate  70.8 2
+[dist_simple_l68] iters:  1 M Elapsed: 5.191534 s Rate:  0.2 (M/sec) elRate  13.3 2
+Total: 14.630191 seconds
+
+real	0m14.883s
+user	0m14.626s
+sys	0m0.007s
+
+# with memset
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; make clean; make levtest; time ./levtest
+Sa 30 Jul 2022 10:53:47 CEST
+rm -rf *.o levtest levtestcpp levtestarr
+cc -std=c99 -pedantic -Wall -O3   -c -o levtest.o levtest.c
+cc -std=c99 -pedantic -Wall -O3 -o levtest levtest.o
+[dist_bytes]    distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_bytes]      iters: 20 M Elapsed: 0.928689 s Rate: 21.5 (M/sec) elRate 236.9 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.405084 s Rate: 14.2 (M/sec) elRate 156.6 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.894795 s Rate: 22.4 (M/sec) elRate 245.9 4
+[dist_simple]     iters: 20 M Elapsed: 2.295459 s Rate:  8.7 (M/sec) elRate  95.8 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.220321 s Rate:  4.5 (M/sec) elRate 231.5 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.900263 s Rate:  0.3 (M/sec) elRate  17.6 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 0.996314 s Rate:  1.0 (M/sec) elRate  69.3 2
+[dist_simple_l68] iters:  1 M Elapsed: 5.157577 s Rate:  0.2 (M/sec) elRate  13.4 2
+Total: 14.798502 seconds
+
+real	0m15.141s
+user	0m14.796s
+sys	0m0.005s
+
+# with stos-memset
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; make clean; make levtest; time ./levtest
+So 31 Jul 2022 18:21:12 CEST
+rm -rf *.o levtest levtestcpp levtestarr
+cc -std=c99 -pedantic -Wall -O3 -c -o levtest.o levtest.c
+as -g -o stos.o stos.s
+cc -lm -o levtest levtest.o stos.o
+[dist_bytes]    distance: 4 expect: 4
+[dist_utf8_ucs] distance: 4 expect: 4
+[dist_hybrid]   distance: 4 expect: 4
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_bytes]      iters: 20 M Elapsed: 0.940687 s Rate: 21.3 (M/sec) elRate 233.9 4
+[dist_utf8_ucs]   iters: 20 M Elapsed: 1.299513 s Rate: 15.4 (M/sec) elRate 169.3 4
+[dist_hybrid]     iters: 20 M Elapsed: 0.893210 s Rate: 22.4 (M/sec) elRate 246.3 4
+[dist_simple]     iters: 20 M Elapsed: 2.192389 s Rate:  9.1 (M/sec) elRate  100.3 4
+[dist_hybrid_l52] iters:  1 M Elapsed: 0.223184 s Rate:  4.5 (M/sec) elRate 228.5 2
+[dist_simple_l52] iters:  1 M Elapsed: 2.798614 s Rate:  0.4 (M/sec) elRate  18.2 2
+[dist_hybrid_l68] iters:  1 M Elapsed: 0.973241 s Rate:  1.0 (M/sec) elRate  70.9 2
+[dist_simple_l68] iters:  1 M Elapsed: 4.842583 s Rate:  0.2 (M/sec) elRate  14.2 2
+Total: 14.163421 seconds
+
+real	0m14.426s
+user	0m14.157s
+sys	0m0.009s
+
+# with string len=8, without pre-/suffix optimisation
+
+helmut@mbp:~/github/perl/Text-Levenshtein-BVXS/src$ date; make clean; make levtest; time ./levtest
+So 31 Jul 2022 18:52:10 CEST
+rm -rf *.o levtest levtestcpp levtestarr
+cc -std=c99 -pedantic -Wall -O3 -c -o levtest.o levtest.c
+as -g -o stos.o stos.s
+cc -lm -o levtest levtest.o stos.o
+[dist_bytes_l8]    distance: 8 expect: 8
+[dist_utf8_ucs_l8] distance: 8 expect: 8
+[dist_hybrid_l8]   distance: 8 expect: 8
+strlen(utf_str1_l52): 51
+strlen(utf_str2_l52): 51
+a_chars_l52: 51
+b_chars_l52: 51
+[dist_hybrid_l52] distance: 2 expect: 2
+
+strlen(utf_str1_l68): 69
+strlen(utf_str2_l68): 69
+a_chars_l68: 69
+b_chars_l68: 69
+[dist_hybrid_l68] distance: 2 expect: 2
+
+[dist_bytes_l8]    iters: 20 M Elapsed: 0.864439 s Rate: 23.1 (M/sec) elRate 185.1 8
+[dist_utf8_ucs_l8] iters: 20 M Elapsed: 1.259543 s Rate: 15.9 (M/sec) elRate 127.0 8
+[dist_hybrid_l8]   iters: 20 M Elapsed: 0.897382 s Rate: 22.3 (M/sec) elRate 178.3 8
+[dist_simple_l8]   iters: 20 M Elapsed: 2.583910 s Rate:  7.7 (M/sec) elRate  61.9 8
+[dist_hybrid_l52]  iters:  1 M Elapsed: 0.220771 s Rate:  4.5 (M/sec) elRate 231.0 2
+[dist_simple_l52]  iters:  1 M Elapsed: 2.747413 s Rate:  0.4 (M/sec) elRate  18.6 2
+[dist_hybrid_l68]  iters:  1 M Elapsed: 0.972466 s Rate:  1.0 (M/sec) elRate  71.0 2
+[dist_simple_l68]  iters:  1 M Elapsed: 4.745571 s Rate:  0.2 (M/sec) elRate  14.5 2
+Total: 14.291495 seconds
+
+real	0m14.537s
+user	0m14.289s
+sys	0m0.005s
